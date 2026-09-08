@@ -353,7 +353,7 @@
   <span class="pill" id="pill-store">Store: <b>—</b></span>
   <span class="pill changes" id="pill-changes" hidden><b>0</b> changes from template</span>
   <div class="spacer"></div>
-  <a class="ankord" href="https://ankord.com.au" target="_blank" rel="noopener" title="Built and run by Ankor'd"><span>Built by</span><svg role="img" aria-label="Ankor'd" viewBox="444.48 443.78 817.03 194.35"><use href="#ankord-logo"/></svg></a>
+  <a class="ankord" href="https://ankord.com.au" target="_blank" rel="noopener" title="Built and run by Ankor'd"><span>Built by</span><svg role="img" aria-label="Ankor'd" viewBox="0 0 817.03 194.35"><use href="#ankord-logo"/></svg></a>
   <button class="btn" id="btn-reset" title="Put everything back to the template">Reset</button>
 </header>
 
@@ -373,7 +373,7 @@
 <footer class="ankord-footer">
   <div class="in">
     <div>
-      <a class="logo" href="https://ankord.com.au" target="_blank" rel="noopener"><svg role="img" aria-label="Ankor'd" viewBox="444.48 443.78 817.03 194.35"><use href="#ankord-logo"/></svg></a>
+      <a class="logo" href="https://ankord.com.au" target="_blank" rel="noopener"><svg role="img" aria-label="Ankor'd" viewBox="0 0 817.03 194.35"><use href="#ankord-logo"/></svg></a>
       <div class="tag">Simplify &amp; streamline your business. Marketing &amp; IT integrations from a veteran-owned team in regional Australia.</div>
     </div>
     <div class="links">
@@ -778,7 +778,7 @@ function reviewStepHTML(i, n) {
     </div></section>
     <section class="card send-card" id="send-card"><div class="body">
       <h2 class="group" style="margin-top:0">Send your brief</h2>
-      <div class="send-to"><svg role="img" aria-label="Ankor'd" viewBox="444.48 443.78 817.03 194.35"><use href="#ankord-logo"/></svg><span>Your brief goes straight to <b>Ankor'd</b>, the team that designs and produces the Mister Minit mats.</span></div>
+      <div class="send-to"><svg role="img" aria-label="Ankor'd" viewBox="0 0 817.03 194.35"><use href="#ankord-logo"/></svg><span>Your brief goes straight to <b>Ankor'd</b>, the team that designs and produces the Mister Minit mats.</span></div>
       ${ui.submittedAt ? `<div class="sent-banner">✓ Brief sent ${esc(new Date(ui.submittedAt).toLocaleString())}. A copy was emailed to <b>${esc(state.meta.contactEmail)}</b>. Made more changes? You can submit again.</div>` : ""}
       <p style="margin:0 0 6px">Submitting emails your layout and every price above to ${DESIGN_TEAM}, with a copy to <b>${esc(state.meta.contactEmail || "your email address")}</b>. We'll design the mat from it and be in touch if anything needs clarifying.</p>
       ${issues ? `<p class="warn-note">⚠ There ${issues===1?"is 1 item":"are "+issues+" items"} flagged in the checklist above. You can still submit, but it's worth a quick look first.</p>` : ""}
