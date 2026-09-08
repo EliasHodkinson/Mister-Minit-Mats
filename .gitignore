@@ -1,0 +1,9 @@
+node_modules
+.vercel
+.env
+.env.local
+.DS_Store
+
+# large source assets, not needed to run the app
+Mister Minit Mat-CMYK-Outlined.pdf
+Mister Minit Mat Builder (single-page backup).html

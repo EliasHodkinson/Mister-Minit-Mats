@@ -1,0 +1,39 @@
+{
+  "functions": {
+    "api/submit.js": {
+      "maxDuration": 30
+    }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/misterminit",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/misterminit",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/misterminit/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/misterminit/api/submit",
+      "destination": "/api/submit"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}
