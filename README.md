@@ -52,22 +52,38 @@ and tables, reply-to marketing@.
    (it is only shown once). Note the expiry and set a reminder to rotate it.
 3. **API permissions → Add a permission → Microsoft Graph → Application permissions → `Mail.Send`**,
    then **Grant admin consent**.
-4. **Limit the app to the marketing mailbox.** `Mail.Send` as an application permission can
-   otherwise send as *any* mailbox in the tenant. In PowerShell (`pwsh`):
+4. **Limit the app to the marketing mailbox with Exchange RBAC for Applications.** `Mail.Send` as
+   an application permission can otherwise send as *any* mailbox in the tenant. Exchange's RBAC
+   for Applications scopes the app to one mailbox. In PowerShell (`pwsh`), as an account that is an
+   explicit member of the Exchange **Organization Management** role group (being a Global Admin
+   alone is not enough for the delegating check):
 
    ```powershell
-   Install-Module ExchangeOnlineManagement -Scope CurrentUser   # first time only
+   Install-Module ExchangeOnlineManagement, Microsoft.Graph.Applications -Scope CurrentUser   # first time only
+
+   # Run the Graph and Exchange modules in SEPARATE pwsh sessions – they clash when loaded together.
+   # Session A – look up the app's service principal (Enterprise Application) object id
+   Connect-MgGraph -Scopes "Application.Read.All" -NoWelcome
+   (Get-MgServicePrincipal -Filter "appId eq '<client id>'").Id
+
+   # Session B – Exchange Online
    Connect-ExchangeOnline -UserPrincipalName you@ankord.com.au
-   New-DistributionGroup -Name "Mat Builder Senders" -Alias matbuildersenders -Type Security `
-     -Members marketing@ankord.com.au
-   New-ApplicationAccessPolicy -AppId <client id> -PolicyScopeGroupId matbuildersenders@ankord.com.au `
-     -AccessRight RestrictAccess -Description "Mat Builder may only send as marketing@"
-   Test-ApplicationAccessPolicy -Identity marketing@ankord.com.au -AppId <client id>   # expect: Granted
-   Test-ApplicationAccessPolicy -Identity you@ankord.com.au -AppId <client id>         # expect: Denied
+   Enable-OrganizationCustomization                     # one-time, only if the tenant has never been customised
+   New-ServicePrincipal -AppId <client id> -ObjectId <service principal object id> -DisplayName "Mister Minit Mat Builder"
+   New-ManagementScope -Name "Mat Builder mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'marketing@ankord.com.au'"
+   New-ManagementRoleAssignment -App <client id> -Role "Application Mail.Send" -CustomResourceScope "Mat Builder mailbox"
+   Test-ServicePrincipalAuthorization -Identity <client id> -Resource marketing@ankord.com.au   # expect InScope True
+   Test-ServicePrincipalAuthorization -Identity <client id> -Resource you@ankord.com.au         # expect InScope False
    Disconnect-ExchangeOnline -Confirm:$false
    ```
 
-   The policy can take up to an hour to apply.
+   Then, in Entra, remove the tenant-wide Microsoft Graph `Mail.Send` application permission from
+   the App Registration: the Exchange role assignment is what authorises the app from here on, and
+   leaving the broad permission in place would bypass the mailbox scope. Sends can take a few
+   minutes to start working after the assignment.
+
+   (The older `New-ApplicationAccessPolicy` approach was tried first and blocked every send at
+   runtime with a RAOP 403 even though `Test-ApplicationAccessPolicy` reported Granted.)
 
 ## Deploy (Vercel)
 
