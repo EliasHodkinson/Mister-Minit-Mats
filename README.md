@@ -6,9 +6,12 @@ via Microsoft 365.
 
 ```
 index.html        the builder (single page, no build step)
-api/submit.js     serverless endpoint: validates the brief, builds the emails, sends them
-lib/brief.js      turns the brief into HTML emails, a tab-separated .txt, .csv and .json
+api/submit.js     serverless endpoint: rate limit → validate → reCAPTCHA → build → send
+lib/brief.js      turns the brief into the Ankor'd-branded HTML emails and a .csv
+lib/brand.js      Ankor'd colours, details and the embedded logo used in the emails
 lib/graph.js      Microsoft Graph sender (App Registration, client-credentials)
+lib/recaptcha.js  reCAPTCHA v3 server-side verification
+lib/ratelimit.js  fixed-window rate limiter (in-memory, or Redis when configured)
 tests/            node --test
 ```
 
@@ -21,10 +24,24 @@ Each submission sends **marketing@ankord.com.au** one email with:
 - the list of changes from the template
 - every section on the mat as a table: item, price, red-price flag, packages, tiers, combo deals,
   with changed rows highlighted orange and added rows green
-- attachments: `…txt` (tab-separated, paste straight into Illustrator), `…csv`, `…json`
+- attached: the render and a `.csv` of every line (for Illustrator)
 
-Reply-to is set to the store contact, so replying goes to them. The store gets a friendlier copy
-with the same render and tables, reply-to marketing@.
+Both emails carry the Ankor'd header, colours and footer. Reply-to on the designer copy is the
+store contact, so replying goes to them. The store gets a friendlier copy with the same render
+and tables, reply-to marketing@.
+
+## Abuse protection
+
+- **reCAPTCHA v3.** The page fetches a token on submit (action `submit_brief`); the endpoint
+  verifies it with Google and rejects scores below `RECAPTCHA_MIN_SCORE` (default 0.5). The
+  badge is hidden, so the required disclosure text sits in the site footer. Keys live in the
+  Google reCAPTCHA admin console; the secret goes in `RECAPTCHA_SECRET_KEY`.
+- **Rate limits.** Per IP (5 / 10 min), per contact email (3 / hour) and overall (100 / hour),
+  all tunable via `RATE_LIMIT_*`. Exceeding one returns HTTP 429 with a friendly message.
+  Out of the box the counters are in-memory per serverless instance, which stops bursts but is
+  not a global guarantee; add **Upstash for Redis** from the Vercel Marketplace (free tier is
+  plenty) and the limits become global automatically.
+- **Payload checks.** Image type and size, section counts, email format, and a 4 MB body cap.
 
 ## One-time setup: Microsoft 365 App Registration
 
@@ -65,6 +82,7 @@ vercel env add MS_APPLICATION_CLIENT_ID
 vercel env add MS_APP_CLIENT_SECRET
 vercel env add MAIL_FROM        # marketing@ankord.com.au
 vercel env add MAIL_TO          # marketing@ankord.com.au (comma-separate for more)
+vercel env add RECAPTCHA_SECRET_KEY
 vercel --prod
 ```
 

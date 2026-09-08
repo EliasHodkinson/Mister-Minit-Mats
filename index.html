@@ -6,6 +6,7 @@
 <title>Mister Minit Mat Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.google.com/recaptcha/api.js?render=6LfNPbAtAAAAAOil4sqqR-kSuGDs-WqF8sbNitSX" async defer></script>
 <style>
   :root{
     --navy:#182a48; --navy-2:#0f1d36; --red:#c4202e; --red-bright:#e63946;
@@ -13,6 +14,8 @@
     --accent:#1e5fa8; --ok:#1a8a3a; --warn:#d3892d;
     --font:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --topbar-h:48px;
+    /* Ankor'd brand (used for the chrome around the Mister Minit builder only) */
+    --ak-teal:#08393a; --ak-teal-2:#0e6567; --ak-orange:#d2691e; --ak-orange-2:#e07529; --ak-ink:#1c2826; --ak-mist:#a8bdb8; --ak-mist-2:#c5d3d0;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 var(--font)}
@@ -51,7 +54,24 @@
   .pill.changes{background:var(--warn);color:var(--navy)}
   .pill.changes b{color:var(--navy)}
 
-  @media (max-width:700px){ .topbar{padding:8px 12px;gap:8px} .topbar .btn{padding:5px 9px;font-size:13px} #pill-store{display:none} }
+  .topbar .ankord{display:inline-flex;align-items:center;gap:8px;color:#9fb0cc;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;margin-right:4px;white-space:nowrap}
+  .topbar .ankord svg{height:17px;width:auto;color:var(--ak-orange);display:block}
+  .topbar .ankord:hover svg{color:var(--ak-orange-2)}
+  @media (max-width:700px){ .topbar{padding:8px 12px;gap:8px} .topbar .btn{padding:5px 9px;font-size:13px} #pill-store{display:none} .topbar .ankord span{display:none} }
+
+  /* Ankor'd footer */
+  .ankord-footer{background:var(--ak-teal);color:#fff;border-top:4px solid var(--ak-orange);margin-top:8px}
+  .ankord-footer .in{max-width:1600px;margin:0 auto;padding:28px 20px 24px;display:flex;flex-wrap:wrap;gap:18px 40px;align-items:flex-start;justify-content:space-between}
+  .ankord-footer .logo{display:inline-block;border:none}
+  .ankord-footer .logo svg{height:32px;width:auto;color:var(--ak-orange);display:block}
+  .ankord-footer .tag{color:var(--ak-mist);font-size:12.5px;margin-top:8px;max-width:420px}
+  .ankord-footer .links{display:flex;flex-direction:column;gap:6px;font-size:13px}
+  .ankord-footer .links b{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ak-mist);margin-bottom:2px}
+  .ankord-footer a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+  .ankord-footer a:hover{border-color:var(--ak-orange)}
+  .ankord-footer .fine{width:100%;color:var(--ak-mist);font-size:11px;line-height:1.55;border-top:1px solid rgba(255,255,255,.12);padding-top:14px}
+  .ankord-footer .fine a{color:var(--ak-mist)}
+  .grecaptcha-badge{visibility:hidden}
 
   /* layout */
   .layout{display:grid;grid-template-columns:230px minmax(0,1fr) 400px;gap:20px;padding:20px;max-width:1600px;margin:0 auto}
@@ -192,7 +212,9 @@
   ol.changes{margin:6px 0 0 18px;padding:0;font-size:12.5px;color:#3c4556}
   ol.changes li{margin:3px 0}
   .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
-  .send-card{border-color:var(--navy);border-width:2px}
+  .send-card{border-color:var(--ak-teal);border-width:2px}
+  .send-to{display:flex;align-items:center;gap:12px;background:#eef3f2;border:1px solid var(--ak-mist-2);border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:13px;color:var(--ak-ink)}
+  .send-to svg{height:22px;width:auto;color:var(--ak-teal);flex:none}
   .send-status{font-size:12.5px;color:var(--muted)}
   .send-status.error{color:var(--red);font-weight:500}
   .warn-note{background:#fff7ea;border:1px solid #f1d9ab;color:#7a4b06;border-radius:8px;padding:8px 12px;font-size:12.5px;margin:6px 0}
@@ -309,11 +331,29 @@
 </head>
 <body>
 
+<!-- Ankor'd wordmark, referenced with <use> wherever it appears -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="ankord-logo" viewBox="444.48 443.78 817.03 194.35"><g>
+    <g>
+      <path fill="currentColor" d="M580.41,593.06l-86.72-48.73c-7.71-4.45-7.17-9.99-6.61-12.71.56-2.72,2.77-9.05,11.11-9.05h45.7v-34.03h-45.7c-22.1,0-39.95,14.54-44.43,36.18-4.48,21.64,2.49,37.37,26.43,50.84l100.22,54.57v-37.07Z"/>
+      <path fill="currentColor" d="M543.9,488.85l86.72,48.73c7.71,4.45,7.17,9.99,6.61,12.71-.56,2.72-2.77,9.05-11.11,9.05h-45.7v34.03h45.7c22.1,0,39.95-14.54,44.43-36.18,4.48-21.64-2.49-37.37-26.43-50.84l-100.22-54.57v37.07Z"/>
+    </g>
+    <g>
+      <path fill="currentColor" d="M914.67,547.86v44.78h-22.63v-43.5c0-14.23-5.56-21.35-16.69-21.35-5.89,0-10.43,1.98-13.64,5.94-3.21,3.96-4.81,9.52-4.81,16.69v42.21h-22.63v-82.5h19.74l2.09,10.27c2.89-3.53,6.37-6.29,10.43-8.27,4.07-1.98,9.1-2.97,15.09-2.97,9.63,0,17.55,3,23.75,8.99,6.21,5.99,9.31,15.89,9.31,29.69Z"/>
+      <path fill="currentColor" d="M945.17,480.28v65l32.42-35.15h25.36l-29.37,32.26,30.98,50.24h-26.16l-20.87-33.38-12.36,13.32v20.06h-22.63v-112.35h22.63Z"/>
+      <path fill="currentColor" d="M1002.72,573.54c-3.58-6.42-5.38-13.8-5.38-22.15s1.79-15.73,5.38-22.15c3.58-6.42,8.67-11.37,15.25-14.85,6.58-3.48,14.2-5.22,22.87-5.22s16.29,1.74,22.87,5.22c6.58,3.48,11.66,8.43,15.25,14.85,3.58,6.42,5.38,13.8,5.38,22.15s-1.79,15.86-5.38,22.23c-3.58,6.37-8.67,11.29-15.25,14.77-6.58,3.48-14.21,5.22-22.87,5.22s-16.29-1.74-22.87-5.22c-6.58-3.48-11.66-8.43-15.25-14.85ZM1061.38,551.39c0-7.06-1.85-12.79-5.54-17.17-3.69-4.39-8.69-6.58-15.01-6.58s-11.16,2.19-14.85,6.58c-3.69,4.39-5.54,10.11-5.54,17.17s1.85,12.79,5.54,17.17c3.69,4.39,8.64,6.58,14.85,6.58s11.32-2.19,15.01-6.58c3.69-4.39,5.54-10.11,5.54-17.17Z"/>
+      <path fill="currentColor" d="M1140.67,530.68h-8.99c-6.42,0-11.13,1.93-14.13,5.78-3,3.85-4.49,9.1-4.49,15.73v40.45h-22.63v-82.5h20.54l2.09,12.36c2.46-4.07,5.51-7.14,9.15-9.23,3.64-2.09,8.51-3.13,14.61-3.13h3.85v20.54Z"/>
+      <path fill="currentColor" d="M1149.74,482.53c2.09-2.03,5-3.05,8.75-3.05s6.79,1.02,8.83,3.05c2.03,2.03,3.05,4.65,3.05,7.86,0,1.18-.05,2.09-.16,2.73l-4.65,30.66h-14.13l-4.66-30.66c-.11-.64-.16-1.5-.16-2.57,0-3.32,1.04-5.99,3.13-8.03Z"/>
+      <path fill="currentColor" d="M1253.51,592.64h-19.74l-2.25-11.4c-6.31,8.24-14.87,12.36-25.68,12.36-7.28,0-13.8-1.74-19.58-5.22-5.78-3.48-10.3-8.43-13.56-14.85-3.26-6.42-4.89-13.86-4.89-22.31s1.63-15.7,4.89-22.07c3.26-6.37,7.81-11.29,13.64-14.77,5.83-3.48,12.39-5.22,19.66-5.22,10.7,0,18.99,3.74,24.88,11.24v-40.13h22.63v112.35ZM1231.2,551.55c0-7.17-1.82-12.95-5.46-17.33s-8.51-6.58-14.61-6.58-11,2.19-14.69,6.58c-3.69,4.39-5.54,10.11-5.54,17.17s1.85,12.79,5.54,17.17c3.69,4.39,8.59,6.58,14.69,6.58s10.97-2.17,14.61-6.5c3.64-4.34,5.46-10.03,5.46-17.09Z"/>
+      <polygon fill="currentColor" points="791.4 480.28 762.51 480.28 721.42 592.64 746.3 592.64 776.15 505.96 806.33 592.64 832.17 592.64 791.4 480.28"/>
+    </g>
+  </g></symbol></svg>
+
 <header class="topbar" id="topbar">
   <div class="brand"><b>Mister Minit</b><span class="tag">Mat Builder</span></div>
   <span class="pill" id="pill-store">Store: <b>—</b></span>
   <span class="pill changes" id="pill-changes" hidden><b>0</b> changes from template</span>
   <div class="spacer"></div>
+  <a class="ankord" href="https://ankord.com.au" target="_blank" rel="noopener" title="Built and run by Ankor'd"><span>Built by</span><svg role="img" aria-label="Ankor'd" viewBox="444.48 443.78 817.03 194.35"><use href="#ankord-logo"/></svg></a>
   <button class="btn" id="btn-reset" title="Put everything back to the template">Reset</button>
 </header>
 
@@ -329,6 +369,21 @@
     <div id="pv"></div>
   </aside>
 </main>
+
+<footer class="ankord-footer">
+  <div class="in">
+    <div>
+      <a class="logo" href="https://ankord.com.au" target="_blank" rel="noopener"><svg role="img" aria-label="Ankor'd" viewBox="444.48 443.78 817.03 194.35"><use href="#ankord-logo"/></svg></a>
+      <div class="tag">Simplify &amp; streamline your business. Marketing &amp; IT integrations from a veteran-owned team in regional Australia.</div>
+    </div>
+    <div class="links">
+      <b>Questions about your mat?</b>
+      <a href="mailto:marketing@ankord.com.au">marketing@ankord.com.au</a>
+      <a href="https://ankord.com.au" target="_blank" rel="noopener">ankord.com.au</a>
+    </div>
+    <div class="fine">The Mister Minit Mat Builder is built and run by Ankor'd Pty Ltd for Mister Minit stores. This site is protected by reCAPTCHA and the Google <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and <a href="https://policies.google.com/terms" target="_blank" rel="noopener">Terms of Service</a> apply.</div>
+  </div>
+</footer>
 
 <div class="toast" id="toast"></div>
 
@@ -346,7 +401,8 @@ const EXAMPLE_MAT = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAOQA5AAD/2wBDAAkG
 <script>
 /* ===================== CONFIG ===================== */
 const SUBMIT_URL = "/misterminit/api/submit";     // serverless endpoint that emails the brief (see api/submit.js + vercel.json rewrites)
-const DESIGN_TEAM = "our design team";            // how the recipient is described to the store on the last step
+const DESIGN_TEAM = "the Ankor'd design team";    // how the recipient is described to the store on the last step
+const RECAPTCHA_SITE_KEY = "6LfNPbAtAAAAAOil4sqqR-kSuGDs-WqF8sbNitSX";
 const STORAGE_KEY = "mm-mat-builder-v1";
 const UI_KEY = STORAGE_KEY + "-ui";
 /* Parts of the mat header that are the same on every store's mat and can't be edited in the form */
@@ -722,6 +778,7 @@ function reviewStepHTML(i, n) {
     </div></section>
     <section class="card send-card" id="send-card"><div class="body">
       <h2 class="group" style="margin-top:0">Send your brief</h2>
+      <div class="send-to"><svg role="img" aria-label="Ankor'd" viewBox="444.48 443.78 817.03 194.35"><use href="#ankord-logo"/></svg><span>Your brief goes straight to <b>Ankor'd</b>, the team that designs and produces the Mister Minit mats.</span></div>
       ${ui.submittedAt ? `<div class="sent-banner">✓ Brief sent ${esc(new Date(ui.submittedAt).toLocaleString())}. A copy was emailed to <b>${esc(state.meta.contactEmail)}</b>. Made more changes? You can submit again.</div>` : ""}
       <p style="margin:0 0 6px">Submitting emails your layout and every price above to ${DESIGN_TEAM}, with a copy to <b>${esc(state.meta.contactEmail || "your email address")}</b>. We'll design the mat from it and be in touch if anything needs clarifying.</p>
       ${issues ? `<p class="warn-note">⚠ There ${issues===1?"is 1 item":"are "+issues+" items"} flagged in the checklist above. You can still submit, but it's worth a quick look first.</p>` : ""}
@@ -923,6 +980,12 @@ function buildPayload(image) {
     image
   };
 }
+function getRecaptchaToken() {
+  return new Promise((ok, fail) => {
+    if (!window.grecaptcha) return fail(new Error("the security check didn't load – please refresh the page and try again"));
+    grecaptcha.ready(() => grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: "submit_brief" }).then(ok, () => fail(new Error("the security check failed – please try again"))));
+  });
+}
 let sending = false;
 async function submitBrief() {
   if (sending) return;
@@ -931,8 +994,10 @@ async function submitBrief() {
   sending = true; btn.disabled = true; st.className = "send-status"; st.textContent = "Preparing your layout…";
   try {
     const image = await renderMatImage();
+    st.textContent = "Running a quick security check…";
+    const recaptchaToken = await getRecaptchaToken();
     st.textContent = "Sending…";
-    const payload = buildPayload(image);
+    const payload = { ...buildPayload(image), recaptchaToken };
     const r = await fetch(SUBMIT_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok || !data.ok) throw new Error(data.error || `the server replied ${r.status}`);
