@@ -101,3 +101,19 @@ test("invoice is the default: approved invoice, due date, pay link and PDF", asy
   assert.equal(inv.LineAmountTypes, "Inclusive");
   assert.deepEqual([doc.kind, doc.number, doc.payUrl, doc.pdf.toString()], ["invoice", "INV-0107", "https://in.xero.com/abc", "%PDF-1.4"]);
 });
+
+test("invoice retries without item codes when Xero says the item is out of stock", async () => {
+  const calls = fakeXero();
+  const inner = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).endsWith("/Invoices") && init?.method === "POST" && JSON.parse(init.body).Invoices[0].LineItems.some(l => l.ItemCode === "80x40cm Mat")) {
+      calls.push({ path: "/Invoices", rejected: true });
+      return new Response(JSON.stringify({ Elements: [{ ValidationErrors: [{ Message: "Insufficient stock. Items are eligible for backorder." }] }] }), { status: 400 });
+    }
+    return inner(url, init);
+  };
+  const doc = await raiseXeroDocument({ ...env, XERO_DOCUMENT: undefined }, { customer, stores, quote, reference: "x" });
+  assert.equal(doc.number, "INV-0107");
+  const sent = calls.filter(c => c.path.endsWith("/Invoices") && !c.rejected).at(-1).body.Invoices[0].LineItems;
+  assert.ok(sent.every(l => !l.ItemCode) && sent[0].AccountCode === "200");
+});

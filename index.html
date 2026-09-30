@@ -57,7 +57,8 @@
   .topbar .ankord{display:inline-flex;align-items:center;gap:8px;color:#9fb0cc;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;margin-right:4px;white-space:nowrap}
   .topbar .ankord svg{height:17px;width:auto;color:var(--ak-orange);display:block}
   .topbar .ankord:hover svg{color:var(--ak-orange-2)}
-  @media (max-width:700px){ .topbar{padding:8px 12px;gap:8px} .topbar .btn{padding:5px 9px;font-size:13px} #pill-store{display:none} .topbar .ankord span{display:none} }
+  @media (max-width:700px){ .topbar{padding:8px 12px;gap:8px;flex-wrap:nowrap} .topbar .btn{padding:5px 9px;font-size:13px} #pill-store,#pill-changes{display:none} .topbar .ankord span{display:none} }
+  @media (max-width:420px){ .brand .tag{display:none} }
 
   /* Ankor'd footer */
   .ankord-footer{background:var(--ak-teal);color:#fff;border-top:4px solid var(--ak-orange);margin-top:8px}
@@ -77,48 +78,46 @@
   .layout{display:grid;grid-template-columns:230px minmax(0,1fr) 400px;gap:20px;padding:20px;max-width:1600px;margin:0 auto}
   .form{min-width:0}
   @media (max-width:1200px){ .layout{grid-template-columns:230px minmax(0,1fr)} .preview{display:none} }
+  .layout.no-preview{grid-template-columns:230px minmax(0,1fr)} .layout.no-preview .preview{display:none}
+  @media (max-width:1000px){ .layout.no-preview{grid-template-columns:minmax(0,1fr)} }
   @media (max-width:1000px){ .layout{grid-template-columns:minmax(0,1fr);padding:14px} }
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,30,60,.04)}
-  .card .body{padding:14px 16px}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+  .card .body{padding:18px 20px}
+  @media (max-width:700px){ .card .body{padding:14px} }
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin:-8px 0 14px;font-size:12px;color:var(--muted)}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
   .dot.changed{background:var(--warn)} .dot.new{background:var(--ok)} .dot.red{background:var(--red-bright)}
   .muted{color:var(--muted)}
 
-  /* stepper – a vertical list of steps on the left; becomes a horizontal strip on small screens */
-  .stepper{position:sticky;top:calc(var(--topbar-h) + 20px);align-self:start;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;z-index:10;box-shadow:0 1px 2px rgba(20,30,60,.04)}
-  .steps-title{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:4px 8px 8px}
-  .steps{display:flex;flex-direction:column;gap:2px}
-  .step-btn{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:none;border-radius:8px;background:transparent;cursor:pointer;color:var(--muted);font-weight:500;font-size:13px;text-align:left;line-height:1.25}
-  .step-btn:hover{background:var(--bg);color:var(--ink)}
-  .step-btn .n{width:24px;height:24px;border-radius:50%;border:2px solid #cfd4de;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;line-height:1}
+  /* stepper – grouped vertical list on the left; a horizontal strip on small screens */
+  .stepper{position:sticky;top:calc(var(--topbar-h) + 20px);align-self:start;z-index:10}
+  .steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+  .steps-group{font-size:11.5px;font-weight:600;color:var(--muted);padding:14px 10px 4px}
+  .steps-group:first-child{padding-top:2px}
+  .step-btn{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:none;border-radius:8px;background:transparent;cursor:pointer;color:#4a5263;font-weight:500;font-size:13.5px;text-align:left;line-height:1.25}
+  .step-btn:hover{background:#e9ebf0;color:var(--ink)}
+  .step-btn .n{width:22px;height:22px;border-radius:50%;border:1.5px solid #c3c8d3;display:grid;place-items:center;font-size:11px;font-weight:600;flex:none;line-height:1;color:var(--muted);background:#fff}
+  .step-btn .n .i{width:13px;height:13px;stroke-width:3}
   .step-btn .t{flex:1;min-width:0}
-  .step-btn .s{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:1px}
-  .step-btn.done{color:var(--ink)}
   .step-btn.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
-  .step-btn.current{color:var(--navy);font-weight:700;background:var(--bg)}
+  .step-btn.current{color:var(--navy);font-weight:700;background:#fff;box-shadow:0 1px 3px rgba(20,30,60,.12)}
   .step-btn.current .n{background:var(--red);border-color:var(--red);color:#fff}
-  .progress{height:4px;background:var(--line);border-radius:2px;margin:10px 8px 4px;overflow:hidden}
-  .progress i{display:block;height:100%;background:var(--red);transition:width .3s}
-  .steps-foot{font-size:11.5px;color:var(--muted);padding:4px 8px 2px}
+  .steps-foot{font-size:11.5px;color:var(--muted);padding:14px 10px 0;margin:0}
   @media (max-width:1000px){
-    .stepper{top:calc(var(--topbar-h) + 10px);align-self:auto;padding:8px 10px}
-    .steps-title,.step-btn .s,.steps-foot{display:none}
-    .steps{flex-direction:row;overflow-x:auto;scrollbar-width:none}
+    .stepper{top:var(--topbar-h);align-self:auto;background:var(--bg);margin:0 -14px;padding:8px 14px;border-bottom:1px solid var(--line)}
+    .steps-group,.steps-foot{display:none}
+    .steps{flex-direction:row;overflow-x:auto;scrollbar-width:none;gap:4px}
     .steps::-webkit-scrollbar{display:none}
-    .step-btn{width:auto;flex:0 0 auto;padding:5px 8px;font-size:12px;white-space:nowrap}
+    .step-btn{width:auto;flex:0 0 auto;padding:5px 8px;font-size:12.5px;white-space:nowrap}
     .step-btn .t{display:none} .step-btn.current .t{display:inline}
-    .progress{margin:8px 0 0}
   }
 
-  /* step intro + nav */
-  .step-intro .eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:4px}
-  .step-intro h1{margin:0 0 6px;font-size:22px;font-weight:700;color:var(--navy)}
-  .step-intro p{margin:6px 0;color:#3c4556}
-  .step-intro ul.todo{margin:8px 0 0 18px;padding:0;color:#3c4556}
-  .step-intro li{margin:3px 0}
+  /* step heading + nav */
+  .step-head{margin:2px 0 18px}
+  .step-head h1{margin:0;font-size:26px;line-height:1.2;font-weight:700;color:var(--navy);letter-spacing:-.01em;text-wrap:balance}
+  .step-head p{margin:6px 0 0;color:#4a5263;max-width:62ch}
   .step-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0 40px}
   .step-nav .nav-pos{font-size:12px;color:var(--muted);text-align:center}
   .step-nav .btn{padding:9px 16px;font-weight:600}
@@ -127,8 +126,8 @@
   .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
   .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
   @media (max-width:700px){ .grid2,.grid3{grid-template-columns:1fr} }
-  .field label{display:block;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px}
-  .field label .req{color:var(--red);margin-left:2px}
+  .field label{display:block;font-size:13px;font-weight:500;color:var(--ink);margin-bottom:5px}
+  .opt{font-weight:400;color:var(--muted);font-size:12px}
   .field .hint{font-size:11.5px;color:var(--muted);margin-top:3px}
   .field.changed input,.field.changed textarea{border-color:var(--warn);background:#fff9f0}
   .field.invalid input{border-color:var(--red);background:#fff5f5}
@@ -141,13 +140,12 @@
   /* stores: one row per store the owner is ordering for */
   .store-row{display:grid;grid-template-columns:28px minmax(0,1.3fr) minmax(0,1.3fr) 90px 30px;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
   .store-row:first-of-type{padding-top:0}
-  .store-row .no{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:24px}
-  .store-row .ico{margin-top:24px}
+  .store-row .no{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:30px}
+  .store-row .ico{margin-top:30px}
   @media (max-width:700px){ .store-row{grid-template-columns:24px minmax(0,1fr) 70px 26px} .store-row .l2{grid-column:2/4;grid-row:2} }
   .add-store{margin-top:10px}
-  .mat-size{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg);border-radius:8px;padding:9px 12px;margin-top:12px;font-size:13px}
-  .mat-size b{color:var(--navy)}
-  .check-line{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:12px 0 4px}
+  .check-line{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;margin:14px 0 0}
+  .check-line input,.hl input,.featured input{width:16px;height:16px;accent-color:var(--navy)}
   /* order summary */
   .order{width:100%;border-collapse:collapse;font-size:13px}
   .order td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:top}
@@ -156,30 +154,22 @@
   .order tr.tot td{border-bottom:none;padding:3px 0;color:var(--muted)}
   .order tr.tot td.amt{font-weight:500}
   .order tr.grand td{font-size:15px;font-weight:700;color:var(--navy);padding-top:8px;border-top:2px solid var(--navy)}
-  .quote-box{background:#eaf8ee;border:1px solid #b9e3c3;border-radius:8px;padding:12px 14px;margin:0 0 12px}
-  .quote-box h3{margin:0 0 6px;font-size:15px;color:#155b2b}
-  .quote-box .actions{margin-top:10px}
-  ol.next{margin:6px 0 0 18px;padding:0;font-size:13px;color:#3c4556}
+  ol.next{margin:14px 0 0 18px;padding:0;font-size:13px;color:#4a5263}
   ol.next li{margin:4px 0}
 
-  h2.group{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px;display:flex;align-items:center;gap:10px}
-  h2.group::after{content:"";flex:1;height:1px;background:var(--line)}
-  h2.group .hint{font-weight:500;letter-spacing:0;text-transform:none;font-size:12px}
+  h2.group{font-size:15px;font-weight:600;color:var(--navy);margin:28px 0 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  h2.group:first-child{margin-top:0}
+  h2.group .hint{font-weight:400;font-size:12.5px;color:var(--muted)}
+  h2.group label{font:inherit;color:inherit}
 
-  /* fixed (non-editable) mat header */
-  .fixed-header{background:var(--navy);color:#fff;border-radius:8px;padding:12px 14px 14px;text-align:center;border-bottom:3px solid var(--red)}
-  .fixed-header .lock{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#9fb0cc;background:rgba(255,255,255,.08);padding:3px 9px;border-radius:999px;margin-bottom:8px}
-  .fixed-header b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase;line-height:1.1}
-  .fixed-header b span{color:var(--red-bright);font-size:15px;margin-left:8px}
-  .fixed-header small{display:block;font-size:10px;letter-spacing:.14em;font-weight:600;text-transform:uppercase;margin-top:6px}
-  .fixed-header small.gst{color:#9fb0cc;letter-spacing:.1em;margin-top:3px}
 
   /* section card */
-  .sec{border-left:6px solid var(--c,#999)}
+  .sec-head .swatch{width:14px;height:14px;border-radius:4px;background:var(--c,#999);flex:none}
   .sec-head{display:flex;align-items:center;gap:8px;padding:10px 12px 10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .sec-head .title{flex:1;min-width:200px}
   .sec-head .title input{font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:14px}
-  .sec-head .kind{font-size:11px;color:var(--muted);background:var(--bg);border-radius:999px;padding:3px 8px;white-space:nowrap}
+  .sec-head .kind{font-size:12px;color:var(--muted);white-space:nowrap}
+  @media (max-width:700px){ .sec-head{flex-wrap:nowrap;padding:8px 10px} .sec-head .title{min-width:0} .sec-head .kind{display:none} }
   .sec-head.changed .title input{border-color:var(--warn);background:#fff9f0}
   .sec-head.new .title input{border-color:var(--ok);background:#f2fbf4}
   .sec-tools{display:flex;gap:4px;align-items:center}
@@ -203,14 +193,15 @@
   .cols-combos{grid-template-columns:28px minmax(0,1fr) minmax(0,1.6fr) 74px 74px 86px 110px 24px 24px 28px}
   @media (max-width:900px){
     .rowhead{display:none}
-    .row{grid-template-columns:repeat(2,minmax(0,1fr)) !important;border:1px solid var(--line);padding:8px;margin-bottom:6px}
+    .row{grid-template-columns:repeat(2,minmax(0,1fr)) !important;border-bottom:1px solid var(--line);border-radius:0;padding:10px 0;gap:8px}
+    .row:last-child{border-bottom:none}
     .row > *{grid-column:auto}
     .row .idx{display:none}
   }
   .row .tools{display:contents}
   @media (max-width:900px){
-    .row .tools{display:flex;grid-column:1/-1;justify-content:flex-end;gap:2px;border-top:1px dashed var(--line);padding-top:4px;margin-top:2px}
-    .row .tools .ico{width:34px}
+    .row .tools{display:flex;justify-content:flex-end;gap:2px}
+    .row .tools .ico{width:34px;height:34px}
   }
   .idx{font-size:11px;color:var(--muted);text-align:right;padding-right:2px}
   .hl{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap}
@@ -223,32 +214,50 @@
   .add-row{margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   input[type=color]{width:100%;height:34px;border:1px solid var(--line);border-radius:6px;padding:2px;background:#fff;cursor:pointer}
   .featured{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap}
-  .add-sec{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 16px;border:1px dashed #c9ced9;border-radius:10px;background:transparent;color:var(--muted);margin-bottom:16px}
+  .add-sec{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px 16px;border:1px dashed #c9ced9;border-radius:10px;background:transparent;color:#4a5263;font-size:13px;font-weight:500;margin-bottom:16px}
   .add-sec select{width:auto}
   .empty{border:1px dashed #c9ced9;border-radius:10px;padding:22px 16px;text-align:center;color:var(--muted);margin-bottom:16px;background:#fff}
 
   /* review step */
-  .big-label{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;font-weight:800;text-transform:uppercase;letter-spacing:.1em;font-size:13px;padding:7px 14px;border-radius:6px;margin-bottom:8px}
-  .big-label.example{background:var(--red)}
   .example-img{width:100%;display:block;border-radius:8px}
   .checks{display:flex;flex-direction:column}
   .check{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
   .check:last-child{border-bottom:none}
-  .check i{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;color:#fff;background:var(--ok);line-height:1}
-  .check.warn i{background:var(--warn)}
+  .check > .i{width:18px;height:18px;color:var(--ok)}
+  .check.warn > .i{color:var(--warn)}
+  .check.ok{border:none;padding:0}
   .check span{flex:1;min-width:0}
   ol.changes{margin:6px 0 0 18px;padding:0;font-size:12.5px;color:#3c4556}
   ol.changes li{margin:3px 0}
   .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
   .send-card{border-color:var(--ak-teal);border-width:2px}
-  .send-to{display:flex;align-items:center;gap:12px;background:#eef3f2;border:1px solid var(--ak-mist-2);border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:13px;color:var(--ak-ink)}
-  .send-to svg{height:22px;width:auto;color:var(--ak-teal);flex:none}
   .send-status{font-size:12.5px;color:var(--muted)}
   .send-status.error{color:var(--red);font-weight:500}
-  .warn-note{background:#fff7ea;border:1px solid #f1d9ab;color:#7a4b06;border-radius:8px;padding:8px 12px;font-size:12.5px;margin:6px 0}
-  .sent-banner{background:#eaf8ee;border:1px solid #b9e3c3;color:#155b2b;border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 10px}
   .mat-render-src{position:absolute;left:-20000px;top:0;width:1500px}
   .actions .btn{padding:9px 16px;font-weight:600}
+
+  /* icons */
+  .i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px}
+  .ico .i{width:15px;height:15px}
+  .btn .i{width:15px;height:15px}
+  .btn.ghost.on{background:var(--bg);border-color:var(--line)}
+  .btn.big{padding:12px 22px;font-size:15px}
+  /* section options panel */
+  .sec-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;padding:14px 16px;background:#f7f8fa;border-bottom:1px solid var(--line)}
+  .sec-opts .full{grid-column:1/-1}
+  .opt-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+  @media (max-width:700px){ .sec-opts{grid-template-columns:1fr} }
+  .meta-line{font-size:12.5px;color:var(--muted);margin:14px 0 0}
+  .fine-print{font-size:12px;color:var(--muted);margin:12px 0 0}
+  details.more{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+  details.more summary{cursor:pointer;font-size:13.5px;font-weight:500;color:var(--navy);list-style:none;display:flex;align-items:center;gap:6px}
+  details.more summary::-webkit-details-marker{display:none}
+  details.more summary .i{transition:transform .15s}
+  details.more[open] summary .i{transform:rotate(90deg)}
+  details.more > :not(summary){margin-top:10px}
+  .done-box{background:#eaf8ee;border:1px solid #b9e3c3;border-radius:8px;padding:12px 14px;margin:0 0 18px;color:#155b2b}
+  .done-box h3{margin:0;font-size:15px;display:flex;align-items:center;gap:6px}
+  .done-box p{margin:4px 0 0;font-size:13px}
 
   /* preview */
   .preview{position:sticky;top:calc(var(--topbar-h) + 20px);align-self:start;max-height:calc(100vh - var(--topbar-h) - 40px);overflow:auto;border-radius:10px;background:var(--navy-2);padding:12px;border:1px solid #0b152a}
@@ -359,6 +368,22 @@
 </head>
 <body>
 
+<!-- UI icons: 24px grid, 2px round stroke -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-down-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+  </defs>
+</svg>
+
 <!-- Ankor'd wordmark, referenced with <use> wherever it appears -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="ankord-logo" viewBox="444.48 443.78 817.03 194.35"><g>
     <g>
@@ -379,10 +404,10 @@
 <header class="topbar" id="topbar">
   <div class="brand"><b>Mister Minit</b><span class="tag">Mat Builder</span></div>
   <span class="pill" id="pill-store">Store: <b>—</b></span>
-  <span class="pill changes" id="pill-changes" hidden><b>0</b> changes from template</span>
+  <span class="pill changes" id="pill-changes" hidden><b>0</b> changes</span>
   <div class="spacer"></div>
   <a class="ankord" href="https://ankord.com.au" target="_blank" rel="noopener" title="Built and run by Ankor'd"><span>Built by</span><svg role="img" aria-label="Ankor'd" viewBox="0 0 817.03 194.35"><use href="#ankord-logo"/></svg></a>
-  <button class="btn" id="btn-reset" title="Put everything back to the template">Reset</button>
+  <button class="btn ghost" id="btn-reset">Start over</button>
 </header>
 
 <main class="layout" id="layout">
@@ -393,7 +418,7 @@
   </div>
 
   <aside class="preview" id="preview">
-    <h3 id="pv-title">Live preview (layout is approximate)</h3>
+    <h3 id="pv-title">Preview</h3>
     <div id="pv"></div>
   </aside>
 </main>
@@ -608,6 +633,7 @@ const AU_STATES = ["ACT","NSW","NT","QLD","SA","TAS","VIC","WA"];
 let PRICING = { first:250, extra:150, freight:25, includesGst:true, gstRate:0.1, designMinutes:45, document:"invoice" };
 const DOC = () => PRICING.document === "quote" ? "quote" : "invoice";     // what Xero raises on submit
 const money = n => "$" + Number(n || 0).toLocaleString("en-AU", { minimumFractionDigits:2, maximumFractionDigits:2 });
+const dollars = n => Number.isInteger(+n) ? "$" + n : money(n);     // "$250" in running text
 const totalMats = () => state.stores.reduce((n, st) => n + (Math.floor(+st.qty) || 0), 0);
 function orderLines() {
   const mats = totalMats(), p = PRICING, lines = [];
@@ -641,12 +667,13 @@ const colName = c => (COLUMNS.find(([k]) => k === c) || [c, c])[1];
 const colTheme = c => (COLUMNS.find(([k]) => k === c) || [c, c, c])[2];
 
 /* ===================== STEPS ===================== */
+/* group: the stepper shows the steps in three blocks – your order, the mat itself, then submit */
 const STEPS = [
-  { id:"store", label:"Store details", sub:"Stores, business & contact" },
-  ...COLUMNS.map(([col, name, theme]) => ({ id:"col:"+col, col, label:theme, pos:name })),
-  { id:"review", label:"Review & send", sub:"Final check" },
+  { id:"stores",   group:"Order", label:"Stores" },
+  { id:"business", group:"Order", label:"Business details" },
+  ...COLUMNS.map(([col, name, theme]) => ({ id:"col:"+col, group:"Mat", col, label:theme, pos:name })),
+  { id:"review",   group:"Submit", label:"Review & submit" },
 ];
-const stepSub = s => s.col ? (n => `${n} section${n===1?"":"s"}`)(state.sections.filter(x => x.column === s.col).length) : s.sub;
 const stepIndex = id => STEPS.findIndex(s => s.id === id);
 let ui;
 try { ui = JSON.parse(localStorage.getItem(UI_KEY)); } catch(e) { ui = null; }
@@ -658,6 +685,7 @@ const isDone = id => ui.done.includes(id);
 const markDone = id => { if (id !== "review" && !isDone(id)) ui.done.push(id); };
 
 /* ===================== FORM RENDER ===================== */
+const icon = name => `<svg class="i" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const $ = sel => document.querySelector(sel);
 const form = $("#form"), stepView = $("#step-view"), pv = $("#pv");
 const collapsed = new Set();
@@ -669,9 +697,9 @@ function ta(sec, it, key, ph) {
   return `<textarea rows="3" data-sec="${sec.id}" data-item="${it.id}" data-key="${key}" placeholder="${ph}">${esc(it[key])}</textarea>`;
 }
 function rowTools(sec, it) {
-  return `<div class="tools"><button class="ico" data-act="up-item" data-sec="${sec.id}" data-item="${it.id}" title="Move up">▲</button>
-          <button class="ico" data-act="down-item" data-sec="${sec.id}" data-item="${it.id}" title="Move down">▼</button>
-          <button class="ico del" data-act="del-item" data-sec="${sec.id}" data-item="${it.id}" title="Remove this line">✕</button></div>`;
+  return `<div class="tools"><button class="ico" data-act="up-item" data-sec="${sec.id}" data-item="${it.id}" title="Move up" aria-label="Move line up">${icon("up")}</button>
+          <button class="ico" data-act="down-item" data-sec="${sec.id}" data-item="${it.id}" title="Move down" aria-label="Move line down">${icon("down")}</button>
+          <button class="ico del" data-act="del-item" data-sec="${sec.id}" data-item="${it.id}" title="Remove line" aria-label="Remove line">${icon("x")}</button></div>`;
 }
 function rowClass(sec, it) {
   const ch = itemChanges(sec, it);
@@ -695,51 +723,65 @@ function renderRow(sec, it, idx) {
   return `<div class="row cols-${k} ${rowClass(sec,it)}" data-row="${it.id}"><i class="mark"></i><span class="idx">${idx+1}</span>${cells}${rowTools(sec,it)}</div>`;
 }
 /* pos / total are the section's position among the sections in the same part of the mat */
+const openOpts = new Set();     // sections with their Options panel open
 function renderSection(sec, pos, total) {
   const pal = PALETTE[sec.color] || PALETTE.orange;
   const sch = secChanges(sec);
   const secCls = sch === null ? "new" : (sch.length ? "changed" : "");
   const head = HEADS[sec.kind].map(h => `<span>${h}</span>`).join("");
-  const showSub = sec.kind === "tiers" || sec.subtitle, showBadge = sec.kind === "packages" || sec.badge;
-  return `<section class="card sec ${collapsed.has(sec.id) ? "collapsed" : ""}" style="--c:${pal.bg}" data-sec-card="${sec.id}">
+  const isCol = collapsed.has(sec.id), isOpt = openOpts.has(sec.id);
+  const warnStore = mentionsTemplateStore(sec);
+  const txt = (key, label, ph="") => `<div class="field"><label>${label}</label><input type="text" data-sec="${sec.id}" data-key="${key}" value="${esc(sec[key])}" placeholder="${ph}"></div>`;
+  const foot = `<div class="field full"><label>Footnote</label><textarea rows="1" data-sec="${sec.id}" data-key="footnote" placeholder="e.g. LIFETIME GUARANTEE ON ALL HOUSEHOLD KEYS">${esc(sec.footnote)}</textarea>
+      ${warnStore ? `<div class="err">Mentions the template stores (Blacktown / Stanhope Village). Update or clear it.</div>` : ""}</div>`;
+  // fields that are on the mat stay visible; empty optional ones live in Options
+  const shown = [
+    (sec.kind === "tiers" || sec.subtitle) && txt("subtitle", "Subtitle"),
+    (sec.kind === "packages" || sec.badge) && txt("badge", "Header badge", "e.g. SAVE UP TO $42"),
+    (sec.footnote || warnStore) && foot,
+  ].filter(Boolean);
+  return `<section class="card sec ${isCol ? "collapsed" : ""}" style="--c:${pal.bg}" data-sec-card="${sec.id}">
     <div class="sec-head ${secCls}">
-      <button class="ico" data-act="toggle" data-sec="${sec.id}" title="Collapse / expand">${collapsed.has(sec.id) ? "▸" : "▾"}</button>
-      <div class="title"><input type="text" data-sec="${sec.id}" data-key="title" value="${esc(sec.title)}" placeholder="SECTION TITLE"></div>
-      <span class="kind">${KIND_NAME[sec.kind]} · ${sec.items.length} line${sec.items.length===1?"":"s"}</span>
-      <div class="sec-tools">
-        <select data-sec="${sec.id}" data-key="color" title="Header colour">${Object.entries(PALETTE).map(([k,p]) => `<option value="${k}" ${k===sec.color?"selected":""}>${p.name}</option>`).join("")}</select>
-        <select data-sec="${sec.id}" data-key="column" title="Where on the mat (moves it to that step)">${COLUMNS.map(([k,n,t]) => `<option value="${k}" ${k===sec.column?"selected":""}>${t} (${n})</option>`).join("")}</select>
-        <button class="ico" data-act="up-sec" data-sec="${sec.id}" title="Move section up" ${pos===0?"disabled":""}>▲</button>
-        <button class="ico" data-act="down-sec" data-sec="${sec.id}" title="Move section down" ${pos===total-1?"disabled":""}>▼</button>
-        <button class="ico del" data-act="del-sec" data-sec="${sec.id}" title="Remove this whole section">✕</button>
-      </div>
+      <button class="ico" data-act="toggle" data-sec="${sec.id}" aria-expanded="${!isCol}" aria-label="${isCol ? "Expand" : "Collapse"} section">${icon(isCol ? "right" : "down-chev")}</button>
+      <span class="swatch" title="${esc(pal.name)}"></span>
+      <div class="title"><input type="text" data-sec="${sec.id}" data-key="title" value="${esc(sec.title)}" placeholder="Section title" aria-label="Section title"></div>
+      <span class="kind">${sec.items.length} line${sec.items.length===1?"":"s"}</span>
+      <button class="btn small ghost ${isOpt ? "on" : ""}" data-act="opts" data-sec="${sec.id}" aria-expanded="${isOpt}">${icon("sliders")} Options</button>
     </div>
+    ${isOpt ? `<div class="sec-opts">
+      <div class="field"><label>Colour</label><select data-sec="${sec.id}" data-key="color">${Object.entries(PALETTE).map(([k,p]) => `<option value="${k}" ${k===sec.color?"selected":""}>${p.name}</option>`).join("")}</select></div>
+      <div class="field"><label>Position on mat</label><select data-sec="${sec.id}" data-key="column">${COLUMNS.map(([k,n,t]) => `<option value="${k}" ${k===sec.column?"selected":""}>${t} (${n})</option>`).join("")}</select></div>
+      ${sec.kind !== "tiers" && !sec.subtitle ? txt("subtitle", "Subtitle") : ""}
+      ${sec.kind !== "packages" && !sec.badge ? txt("badge", "Header badge", "e.g. SAVE UP TO $42") : ""}
+      ${sec.footnote || warnStore ? "" : foot}
+      <div class="opt-actions">
+        <button class="btn small" data-act="up-sec" data-sec="${sec.id}" ${pos===0?"disabled":""}>${icon("up")} Move up</button>
+        <button class="btn small" data-act="down-sec" data-sec="${sec.id}" ${pos===total-1?"disabled":""}>${icon("down")} Move down</button>
+        <button class="btn small danger" data-act="del-sec" data-sec="${sec.id}">${icon("x")} Remove section</button>
+      </div>
+    </div>` : ""}
     <div class="sec-body">
       <div class="rows">
         <div class="rowhead cols-${sec.kind}">${head}</div>
         ${sec.items.map((it,i) => renderRow(sec, it, i)).join("")}
       </div>
-      <div class="add-row"><button class="btn small" data-act="add-item" data-sec="${sec.id}">+ Add line</button></div>
-      <div class="sec-extra">
-        ${showSub ? `<div class="field"><label>Subtitle</label><input type="text" data-sec="${sec.id}" data-key="subtitle" value="${esc(sec.subtitle)}"></div>` : ""}
-        ${showBadge ? `<div class="field"><label>Header badge</label><input type="text" data-sec="${sec.id}" data-key="badge" value="${esc(sec.badge)}" placeholder="e.g. SAVE UP TO $42"></div>` : ""}
-        <div class="field full"><label>Footnote (optional)</label><textarea rows="1" data-sec="${sec.id}" data-key="footnote" placeholder="e.g. ★ LIFETIME GUARANTEE ON ALL HOUSEHOLD KEYS">${esc(sec.footnote)}</textarea>
-          ${mentionsTemplateStore(sec) ? `<div class="hint">⚠ This footnote mentions the template store name. Update it for your store or clear it.</div>` : ""}</div>
-      </div>
+      <div class="add-row"><button class="btn small" data-act="add-item" data-sec="${sec.id}">${icon("plus")} Add line</button></div>
+      ${shown.length ? `<div class="sec-extra">${shown.join("")}</div>` : ""}
     </div>
   </section>`;
 }
 const mentionsTemplateStore = sec => /blacktown|stanhope/i.test(sec.footnote || "");
 const LEGEND = `<div class="legend">
-  <span><i class="dot changed"></i> Changed from template</span>
+  <span><i class="dot changed"></i> Changed</span>
   <span><i class="dot new"></i> Added</span>
-  <span><i class="dot red"></i> Red price on the mat</span>
+  <span><i class="dot red"></i> Red price</span>
 </div>`;
+const stepHead = (title, lede) => `<header class="step-head"><h1>${title}</h1>${lede ? `<p>${lede}</p>` : ""}</header>`;
 
-/* ---- Step 1: store details */
-const field = (key, label, { req=true, hint="", attrs="", cls="" } = {}) =>
-  `<div class="field ${cls}"><label>${label}${req ? '<span class="req">*</span>' : ""}</label><input type="text" data-meta="${key}" ${attrs}>${hint ? `<div class="hint">${hint}</div>` : ""}</div>`;
-const stateSelect = (key, cls="") => `<div class="field ${cls}"><label>State<span class="req">*</span></label><select data-meta="${key}"><option value="">Select…</option>${AU_STATES.map(x => `<option>${x}</option>`).join("")}</select></div>`;
+/* ---- Step 1: stores */
+const field = (key, label, { optional=false, hint="", attrs="", cls="" } = {}) =>
+  `<div class="field ${cls}"><label for="f-${key}">${label}${optional ? ' <span class="opt">optional</span>' : ""}</label><input type="text" id="f-${key}" data-meta="${key}" ${attrs}>${hint ? `<div class="hint">${hint}</div>` : ""}</div>`;
+const stateSelect = key => `<div class="field"><label for="f-${key}">State</label><select id="f-${key}" data-meta="${key}"><option value="">Select</option>${AU_STATES.map(x => `<option>${x}</option>`).join("")}</select></div>`;
 const addressFields = p => `<div class="grid4">
     ${field(p+"Street", "Street address", { cls:"span-all", attrs:'autocomplete="street-address"' })}
     ${field(p+"Suburb", "Suburb", { attrs:'autocomplete="address-level2"' })}
@@ -748,194 +790,153 @@ const addressFields = p => `<div class="grid4">
   </div>`;
 function storeRowHTML(st, i) {
   return `<div class="store-row" data-store-row="${st.id}">
-      <span class="no">${i+1}</span>
-      <div class="field"><label>Store name – line 1<span class="req">*</span></label><input type="text" data-store="${st.id}" data-key="line1" value="${esc(st.line1)}" placeholder="e.g. PENRITH"></div>
-      <div class="field l2"><label>Line 2 (optional)</label><input type="text" data-store="${st.id}" data-key="line2" value="${esc(st.line2)}" placeholder="e.g. WESTFIELD"></div>
-      <div class="field"><label>Qty<span class="req">*</span></label><input type="number" min="1" max="${MAX_QTY}" step="1" data-store="${st.id}" data-key="qty" value="${esc(st.qty)}"></div>
-      ${state.stores.length > 1 ? `<button class="ico del" data-act="del-store" data-store="${st.id}" title="Remove this store">✕</button>` : "<span></span>"}
+      <span class="no" aria-hidden="true">${i+1}</span>
+      <div class="field"><label>Store name</label><input type="text" data-store="${st.id}" data-key="line1" value="${esc(st.line1)}" placeholder="PENRITH"></div>
+      <div class="field l2"><label>Second line <span class="opt">optional</span></label><input type="text" data-store="${st.id}" data-key="line2" value="${esc(st.line2)}" placeholder="WESTFIELD"></div>
+      <div class="field"><label>Mats</label><input type="number" min="1" max="${MAX_QTY}" step="1" data-store="${st.id}" data-key="qty" value="${esc(st.qty)}"></div>
+      ${state.stores.length > 1 ? `<button class="ico del" data-act="del-store" data-store="${st.id}" title="Remove store" aria-label="Remove store ${i+1}">${icon("x")}</button>` : "<span></span>"}
     </div>`;
 }
-function storeStepHTML(i, n) {
-  const m = DEFAULT.meta, p = PRICING;
-  return `<section class="card step-intro"><div class="body">
-      <div class="eyebrow">Step ${i+1} of ${n} · Store &amp; business details</div>
-      <h1>Tell us about your store${state.stores.length > 1 ? "s" : ""} and business</h1>
-      <p>This builder is pre-filled with the current Mister Minit mat template. First we need your store${state.stores.length > 1 ? "s" : ""} and business details for your ${DOC()}, then we'll walk you through the mat one part at a time so you can check every price. At the end you'll see your mat laid out, then submit it – we'll email your ${DOC()} straight away.</p>
-      <p><b>Your work saves automatically in this browser</b>, so you can stop and come back any time.</p>
-    </div></section>
+function storesStepHTML() {
+  const p = PRICING;
+  return stepHead("Stores", "Add each store that needs a mat. Every mat uses the same design with that store's name.") + `
     <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Your stores <span class="hint">each store name is shown top-right of its mat</span></h2>
       <div id="store-rows">${state.stores.map(storeRowHTML).join("")}</div>
-      ${state.stores.length < MAX_STORES ? `<button class="btn small navy add-store" data-act="add-store">+ Add another store</button>` : ""}
-      <div class="mat-size">📐 Mat size: <b>${MAT_SIZE}</b><span class="muted">– the standard Mister Minit mat. Every store gets the same design with its own name.</span></div>
-      <p class="muted" style="font-size:12px;margin:8px 0 0">Own more than one store? Add them all here. Your first mat is ${money(p.first)} and includes up to ${p.designMinutes} minutes of design time; every mat after that is ${money(p.extra)}.</p>
+      ${state.stores.length < MAX_STORES ? `<button class="btn small add-store" data-act="add-store">${icon("plus")} Add store</button>` : ""}
+      <p class="meta-line">Mat size ${MAT_SIZE} · First mat ${dollars(p.first)} incl. ${p.designMinutes} min design · Each extra mat ${dollars(p.extra)} · Freight ${dollars(p.freight)} · ${p.includesGst ? "Prices include GST" : "Plus GST"}</p>
     </div></section>
     <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Business details <span class="hint">for your invoice</span></h2>
-      <div class="grid2">
-        ${field("legalName", "Legal entity name", { hint:"As registered with your ABN, e.g. Smith Holdings Pty Ltd", attrs:'autocomplete="organization"' })}
-        ${field("tradingName", "Trading name", { hint:"The name your customers know you by" })}
-        ${field("abn", "ABN", { attrs:'inputmode="numeric" placeholder="12 345 678 901"', hint:'<a href="https://abr.business.gov.au" target="_blank" rel="noopener">Look up your ABN</a>' })}
-      </div>
-      <h2 class="group">Contact person <span class="hint">who we send the ${DOC()} and mockup to</span></h2>
-      <div class="grid2">
-        ${field("firstName", "First name", { attrs:'autocomplete="given-name"' })}
-        ${field("lastName", "Last name", { attrs:'autocomplete="family-name"' })}
-        ${field("contactEmail", "Contact email", { attrs:'inputmode="email" autocomplete="email"', hint:`Your ${DOC()} and a copy of your brief are emailed here` })}
-        ${field("contactPhone", "Contact number", { attrs:'inputmode="tel" autocomplete="tel"' })}
-      </div>
-      <h2 class="group">Billing address</h2>
-      ${addressFields("bill")}
-      <label class="check-line"><input type="checkbox" data-meta="deliverySame"> Deliver the mats to this address</label>
-      ${state.meta.deliverySame ? "" : `<h2 class="group">Delivery address <span class="hint">where the mats should be sent</span></h2>${addressFields("del")}`}
-    </div></section>
-    <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Your order <span class="hint">updates as you change quantities</span></h2>
+      <h2 class="group">Order total</h2>
       <div id="order-summary">${orderSummaryHTML()}</div>
-    </div></section>
-    <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Mat header <span class="hint">fixed – the same on every store's mat</span></h2>
-      <div class="fixed-header">
-        <span class="lock">🔒 Not editable</span>
-        <b>${esc(m.headline1)}<span>${esc(m.headline2)}</span></b>
-        <small>${esc(m.tagline)}</small>
-        <small class="gst">${esc(m.gst)}</small>
-      </div>
-      <div class="field"><div class="hint">The headline, services strip and GST line are part of the Mister Minit brand and stay the same on every mat. Only your store name changes. If you don't offer one of the services listed, mention it in the notes on the last step.</div></div>
     </div></section>`;
 }
 
-/* ---- Steps 2–7: one part of the mat each */
-function columnStepHTML(s, i, n) {
+/* ---- Step 2: business, contact and addresses */
+function businessStepHTML() {
+  return stepHead("Business details", `Used for your ${DOC()} and delivery.`) + `
+    <section class="card"><div class="body">
+      <h2 class="group">Business</h2>
+      <div class="grid2">
+        ${field("legalName", "Legal entity name", { hint:"As registered with your ABN", attrs:'autocomplete="organization"' })}
+        ${field("tradingName", "Trading name")}
+        ${field("abn", "ABN", { attrs:'inputmode="numeric" placeholder="12 345 678 901"' })}
+      </div>
+      <h2 class="group">Contact</h2>
+      <div class="grid2">
+        ${field("firstName", "First name", { attrs:'autocomplete="given-name"' })}
+        ${field("lastName", "Last name", { attrs:'autocomplete="family-name"' })}
+        ${field("contactEmail", "Email", { attrs:'inputmode="email" autocomplete="email"', hint:`Your ${DOC()} and mockup are sent here` })}
+        ${field("contactPhone", "Phone", { attrs:'inputmode="tel" autocomplete="tel"' })}
+      </div>
+      <h2 class="group">Billing address</h2>
+      ${addressFields("bill")}
+      <label class="check-line"><input type="checkbox" data-meta="deliverySame"> Deliver to this address</label>
+      ${state.meta.deliverySame ? "" : `<h2 class="group">Delivery address</h2>${addressFields("del")}`}
+    </div></section>`;
+}
+
+/* ---- Steps 3–8: one part of the mat each */
+function columnStepHTML(s) {
   const secs = state.sections.filter(sec => sec.column === s.col);
-  const names = secs.map(x => x.title).filter(Boolean);
-  const kindOpts = `<select id="new-kind">
-        <option value="list">Price list (item + price)</option>
-        <option value="packages">Service packages (like Watch Service)</option>
-        <option value="tiers">Tiers (like Engraving)</option>
-        <option value="combos">Combo deals (was / now / save)</option>
+  const kindOpts = `<select id="new-kind" aria-label="Section type">
+        <option value="list">Price list</option>
+        <option value="packages">Packages</option>
+        <option value="tiers">Tiers</option>
+        <option value="combos">Combo deals</option>
       </select>`;
-  return `<section class="card step-intro"><div class="body">
-      <div class="eyebrow">Step ${i+1} of ${n} · ${esc(s.pos)} of the mat</div>
-      <h1>${esc(s.label)}</h1>
-      <p>${secs.length
-          ? `This part of the mat has <b>${secs.length} section${secs.length===1?"":"s"}</b>: ${esc(names.join(", "))}. Go through each line and check it matches what your store charges.`
-          : `Nothing is placed in this part of the mat yet. Add a section below, or move one here using the "where on the mat" menu on any section.`}</p>
-      <ul class="todo">
-        <li>Change any <b>wording or price</b> that's different in your store – it will be highlighted for the designer.</li>
-        <li>Tick <b>Red</b> next to a price to make it stand out in red on the mat.</li>
-        <li>Remove a line or a whole section you don't offer with <b>✕</b>. Add missing ones with <b>+ Add line</b> or <b>+ Add section</b>.</li>
-        <li>Happy with this part? Press <b>Next</b> at the bottom to move on.</li>
-      </ul>
-      ${LEGEND}
-    </div></section>
-    ${secs.length ? secs.map((sec, p) => renderSection(sec, p, secs.length)).join("") : `<div class="empty">No sections here yet – this part of the mat will be left empty.</div>`}
+  return stepHead(esc(s.label), `${esc(s.pos)} of the mat. Match every line to your store's prices, and remove anything you don't offer.`) + LEGEND + `
+    ${secs.length ? secs.map((sec, p) => renderSection(sec, p, secs.length)).join("") : `<div class="empty">No sections here. This part of the mat will be empty.</div>`}
     <div class="add-sec">
-      <span>Add a new section to ${esc(s.label.toLowerCase())}:</span>
+      <span>New section</span>
       ${kindOpts}
-      <button class="btn small navy" data-act="add-sec" data-col="${s.col}">+ Add section</button>
+      <button class="btn small" data-act="add-sec" data-col="${s.col}">${icon("plus")} Add</button>
     </div>`;
 }
 
-/* ---- Last step: review & send */
+/* ---- Last step: review & submit */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-/* [selector of the input, message] for everything missing on step 1 */
-function storeErrors() {
-  const m = state.meta, errs = [], need = (k, msg) => { if (!norm(m[k])) errs.push([`[data-meta="${k}"]`, msg]); };
+/* [selector of the input, message] for everything missing on the stores / business steps */
+function storesErrors() {
+  const errs = [];
   state.stores.forEach(st => {
-    if (!norm(st.line1)) errs.push([`[data-store="${st.id}"][data-key="line1"]`, "Please enter the store name"]);
+    if (!norm(st.line1)) errs.push([`[data-store="${st.id}"][data-key="line1"]`, "Enter the store name"]);
     const q = +st.qty;
-    if (!(Number.isInteger(q) && q >= 1 && q <= MAX_QTY)) errs.push([`[data-store="${st.id}"][data-key="qty"]`, `1 to ${MAX_QTY}`]);
+    if (!(Number.isInteger(q) && q >= 1 && q <= MAX_QTY)) errs.push([`[data-store="${st.id}"][data-key="qty"]`, `1–${MAX_QTY}`]);
   });
-  need("legalName", "Please enter your legal entity name");
-  need("tradingName", "Please enter your trading name");
-  if (!norm(m.abn)) errs.push(['[data-meta="abn"]', "Please enter your ABN"]);
-  else if (!isValidAbn(m.abn)) errs.push(['[data-meta="abn"]', "That ABN doesn't look right – it should be 11 digits"]);
-  need("firstName", "Please enter a first name");
-  need("lastName", "Please enter a last name");
-  if (!norm(m.contactEmail)) errs.push(['[data-meta="contactEmail"]', `Please enter your email address – your ${DOC()} goes here`]);
-  else if (!EMAIL_RE.test(norm(m.contactEmail))) errs.push(['[data-meta="contactEmail"]', "That doesn't look like an email address"]);
-  need("contactPhone", "Please enter a contact number");
+  return errs;
+}
+function businessErrors() {
+  const m = state.meta, errs = [], need = (k, msg) => { if (!norm(m[k])) errs.push([`[data-meta="${k}"]`, msg]); };
+  need("legalName", "Enter the legal entity name");
+  need("tradingName", "Enter the trading name");
+  if (!norm(m.abn)) errs.push(['[data-meta="abn"]', "Enter the ABN"]);
+  else if (!isValidAbn(m.abn)) errs.push(['[data-meta="abn"]', "Check the ABN – it should be 11 digits"]);
+  need("firstName", "Enter a first name");
+  need("lastName", "Enter a last name");
+  if (!norm(m.contactEmail)) errs.push(['[data-meta="contactEmail"]', "Enter an email address"]);
+  else if (!EMAIL_RE.test(norm(m.contactEmail))) errs.push(['[data-meta="contactEmail"]', "Check the email address"]);
+  need("contactPhone", "Enter a phone number");
   for (const p of m.deliverySame ? ["bill"] : ["bill","del"]) {
-    need(p+"Street", "Please enter the street address");
-    need(p+"Suburb", "Please enter the suburb");
-    need(p+"State", "Please choose a state");
-    if (!/^\d{4}$/.test(norm(m[p+"Postcode"]))) errs.push([`[data-meta="${p}Postcode"]`, "4-digit postcode"]);
+    need(p+"Street", "Enter the street address");
+    need(p+"Suburb", "Enter the suburb");
+    need(p+"State", "Choose a state");
+    if (!/^\d{4}$/.test(norm(m[p+"Postcode"]))) errs.push([`[data-meta="${p}Postcode"]`, "4 digits"]);
   }
   return errs;
 }
-const storeValid = () => storeErrors().length === 0;
-function reviewChecks() {
-  const m = state.meta, checks = [];
-  checks.push(storeValid()
-    ? { ok:true, text:`Store details: <b>${esc(storeName())}</b> · ${totalMats()} mat${totalMats()===1?"":"s"} · ${esc(m.tradingName)} · contact ${esc(m.firstName)} ${esc(m.lastName)}`, step:0 }
-    : { ok:false, text:`Some store, business or contact details are missing`, step:0 });
-  STEPS.forEach((s, idx) => {
-    if (!s.col) return;
-    const cnt = state.sections.filter(x => x.column === s.col).length;
-    const ok = isDone(s.id);
-    checks.push({ ok, text:`${esc(s.label)}: ${ok ? `reviewed · ${cnt} section${cnt===1?"":"s"}` : `not reviewed yet · ${cnt} section${cnt===1?"":"s"}`}`, step:idx });
-  });
+const STEP_ERRORS = { stores: storesErrors, business: businessErrors };
+const storeValid = () => !storesErrors().length && !businessErrors().length;
+/* Things worth a look before submitting; each links back to its step */
+function reviewIssues() {
+  const out = [];
+  if (storesErrors().length) out.push({ text:"Store names or mat quantities are missing", step:stepIndex("stores") });
+  if (businessErrors().length) out.push({ text:"Business or contact details are incomplete", step:stepIndex("business") });
+  STEPS.forEach((s, idx) => { if (s.col && !isDone(s.id)) out.push({ text:`${esc(s.label)} not checked yet`, step:idx }); });
   for (const sec of state.sections) {
-    const idx = stepIndex("col:" + sec.column);
-    if (mentionsTemplateStore(sec)) checks.push({ ok:false, text:`The footnote under "${esc(sec.title || "Untitled")}" still mentions Blacktown / Stanhope Village`, step:idx });
-    if (!norm(sec.title)) checks.push({ ok:false, text:`A ${KIND_NAME[sec.kind].toLowerCase()} section in ${esc(colTheme(sec.column))} has no title`, step:idx });
+    const idx = stepIndex("col:" + sec.column), name = esc(sec.title || "Untitled section");
+    if (mentionsTemplateStore(sec)) out.push({ text:`${name}: footnote mentions Blacktown / Stanhope Village`, step:idx });
+    if (!norm(sec.title)) out.push({ text:`A section in ${esc(colTheme(sec.column))} has no title`, step:idx });
     const blank = sec.items.filter(it => !norm(it.label)).length;
-    if (blank) checks.push({ ok:false, text:`"${esc(sec.title || "Untitled")}" has ${blank} line${blank===1?"":"s"} with no text`, step:idx });
+    if (blank) out.push({ text:`${name}: ${blank} empty line${blank===1?"":"s"}`, step:idx });
   }
-  return checks;
+  return out;
 }
-function reviewStepHTML(i, n) {
-  const d = diff(), checks = reviewChecks(), issues = checks.filter(c => !c.ok).length;
-  return `<section class="card step-intro"><div class="body">
-      <div class="eyebrow">Step ${i+1} of ${n} · Review &amp; send</div>
-      <h1>Check everything, then send it to your designer</h1>
-      <p>Here's a final check of your brief. Below is <b>your layout</b> built from what you've entered, followed by an <b>example of the finished product</b> so you can see how it will look once designed. Anything with an orange <b>!</b> in the checklist is worth a look – use <b>Fix</b> to jump straight to it. When you're happy, press <b>Submit brief</b> at the bottom.</p>
+function reviewStepHTML() {
+  const d = diff(), issues = reviewIssues(), mats = totalMats();
+  return stepHead("Review & submit", `Check your mat, then submit to get your ${DOC()}.`) + `
+    <section class="card"><div class="body">
+      ${issues.length
+        ? `<h2 class="group">${issues.length} thing${issues.length===1?"":"s"} to check</h2>
+           <div class="checks">${issues.map(c => `<div class="check warn">${icon("alert")}<span>${c.text}</span><button class="btn small" data-goto="${c.step}">Go to step</button></div>`).join("")}</div>`
+        : `<div class="check ok">${icon("check")}<span><b>Everything's complete.</b> ${esc(storeName())} · ${mats} mat${mats===1?"":"s"}</span></div>`}
     </div></section>
     <section class="card"><div class="body">
-      <div class="big-label">1 · Your layout design</div>
-      <p class="muted" style="margin:0 0 10px">Built from your content. The layout is approximate – it shows what goes where and what it says, not the final artwork.</p>
+      <h2 class="group">Your mat <span class="hint">Layout only – the designer produces the final artwork</span></h2>
       <div class="mat-render-box" id="mat-render-box"><div class="mat-render mat-wide" id="mat-render"></div></div>
+      <details class="more"><summary>${icon("right")} Compare with a finished mat</summary>
+        <img class="example-img" src="${EXAMPLE_MAT}" alt="Finished Mister Minit price mat (Blacktown / Stanhope Village)" loading="lazy"></details>
+      <details class="more"><summary>${icon("right")} Changes from the template (${d.length})</summary>
+        ${d.length ? `<ol class="changes">${d.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : `<p class="muted">None. The template will be used as-is with your store names.</p>`}</details>
     </div></section>
     <section class="card"><div class="body">
-      <div class="big-label example">2 · Final product example</div>
-      <p class="muted" style="margin:0 0 10px">For reference only – this is the finished Blacktown / Stanhope Village mat. Your mat will be produced in this style, with your content from above.</p>
-      <img class="example-img" src="${EXAMPLE_MAT}" alt="Example of a finished Mister Minit price mat">
-    </div></section>
-    <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Checklist <span class="hint">${issues ? `${issues} thing${issues===1?"":"s"} to look at` : "all good"}</span></h2>
-      <div class="checks">${checks.map(c => `<div class="check ${c.ok?"ok":"warn"}"><i>${c.ok?"✓":"!"}</i><span>${c.text}</span>${c.ok?"":`<button class="btn small" data-goto="${c.step}">Fix</button>`}</div>`).join("")}</div>
-    </div></section>
-    <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Your order <span class="hint">${esc(storeName() || "no stores yet")}</span></h2>
-      ${orderSummaryHTML()}
-      <p class="muted" style="font-size:12px;margin:8px 0 0">Delivered to ${esc(deliveryText() || "your nominated address")}.</p>
-      <div class="actions"><button type="button" class="btn small" data-goto="0">Change stores or details</button></div>
-    </div></section>
-    <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Notes for the designer <span class="hint">optional</span></h2>
-      <div class="field"><textarea data-meta="notes" rows="4" placeholder="Anything else? e.g. 'We don't do Birkenstock', 'Please swap the shoe drawing for a key', 'Our logo lockup is different'…"></textarea>
-      <div class="hint">Anything the form can't capture – services you don't offer, artwork changes, special requests.</div></div>
-    </div></section>
-    <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Changes from the template <span class="hint">${d.length}</span></h2>
-      ${d.length ? `<ol class="changes">${d.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : `<p class="muted" style="margin:0">No changes from the template – the mat will be printed as-is with your store name.</p>`}
+      <h2 class="group"><label for="f-notes">Notes for the designer</label> <span class="opt">optional</span></h2>
+      <textarea id="f-notes" data-meta="notes" rows="3" placeholder="e.g. We don't offer Birkenstock repairs"></textarea>
     </div></section>
     <section class="card send-card" id="send-card"><div class="body">
-      <h2 class="group" style="margin-top:0">Send your brief</h2>
-      <div class="send-to"><svg role="img" aria-label="Ankor'd" viewBox="0 0 817.03 194.35"><use href="#ankord-logo"/></svg><span>Your brief goes straight to <b>Ankor'd</b>, the team that designs and produces the Mister Minit mats.</span></div>
       ${ui.submittedAt ? submittedHTML() : ""}
-      <p style="margin:0 0 6px">Submitting sends your layout and every price above to ${DESIGN_TEAM} and creates your <b>${DOC()}</b>. Your ${DOC()} and a copy of your brief are emailed to <b>${esc(state.meta.contactEmail || "your email address")}</b>.</p>
+      <h2 class="group">Order</h2>
+      ${orderSummaryHTML()}
+      <p class="meta-line">Deliver to ${esc(deliveryText() || "–")}</p>
       <ol class="next">
-        <li>${DOC() === "invoice" ? "Pay your invoice online – you'll get a Pay now link as soon as you submit." : "Approve and pay your quote."}</li>
-        <li>Once it's paid, we apply your changes and send you a mockup.</li>
-        <li>When you're happy with the mockup, we order your mat${totalMats() > 1 ? "s" : ""} and deliver ${totalMats() > 1 ? "them" : "it"} to your nominated address.</li>
+        <li>${DOC() === "invoice" ? "Pay your invoice online." : "Approve and pay your quote."}</li>
+        <li>We apply your changes and email a mockup.</li>
+        <li>Once you approve it, we print and deliver.</li>
       </ol>
-      ${issues ? `<p class="warn-note">⚠ There ${issues===1?"is 1 item":"are "+issues+" items"} flagged in the checklist above. You can still submit, but it's worth a quick look first.</p>` : ""}
       <div class="actions">
-        <button class="btn primary" data-act="submit" id="btn-submit">${ui.submittedAt ? "Submit again" : "Submit brief"}</button>
-        <span class="send-status" id="send-status" aria-live="polite"></span>
+        <button class="btn primary big" data-act="submit" id="btn-submit">${ui.submittedAt ? "Submit again" : `Submit & get ${DOC()}`}</button>
+        <span class="send-status" id="send-status" aria-live="polite">${issues.length ? `${issues.length} item${issues.length===1?"":"s"} above still to check.` : ""}</span>
       </div>
+      <p class="fine-print">Your brief goes to the Ankor'd design team. Your ${DOC()} and a copy of the brief are emailed to ${esc(state.meta.contactEmail || "you")}.</p>
     </div></section>`;
 }
 
@@ -943,57 +944,58 @@ const deliveryText = () => {
   const m = state.meta, p = m.deliverySame ? "bill" : "del";
   return [norm(m[p+"Street"]), [m[p+"Suburb"], m[p+"State"], m[p+"Postcode"]].map(norm).filter(Boolean).join(" ")].filter(Boolean).join(", ");
 };
-/* Shown on the send card once submitted: the quote number, total, and the PDF / pay link */
+/* Shown on the submit card once sent: the invoice / quote number, total, and the pay link / PDF */
 let lastQuotePdf = null;     // base64 PDF from the last submit – kept in memory only
 function submittedHTML() {
   const q = ui.quote, doc = q?.kind || DOC();
-  const when = esc(new Date(ui.submittedAt).toLocaleString());
-  if (!q?.number) return `<div class="sent-banner">✓ Brief sent ${when}. A copy was emailed to <b>${esc(state.meta.contactEmail)}</b>. We'll email your ${DOC()} shortly. Made more changes? You can submit again.</div>`;
-  return `<div class="quote-box">
-      <h3>✓ Brief sent – your ${doc} is ${esc(q.number)}</h3>
-      <div>Total <b>${money(q.total)}</b> AUD including GST. Sent ${when} to <b>${esc(state.meta.contactEmail)}</b>.</div>
+  const when = esc(new Date(ui.submittedAt).toLocaleString("en-AU", { dateStyle:"medium", timeStyle:"short" }));
+  if (!q?.number) return `<div class="done-box"><h3>${icon("check")} Brief sent</h3><p>${when}. Your ${doc} will be emailed to ${esc(state.meta.contactEmail)} shortly.</p></div>`;
+  return `<div class="done-box">
+      <h3>${icon("check")} Brief sent · ${cap(doc)} ${esc(q.number)}</h3>
+      <p>${money(q.total)} incl. GST · emailed to ${esc(state.meta.contactEmail)} · ${when}</p>
       <div class="actions">
-        ${q.payUrl ? `<a class="btn primary" href="${esc(q.payUrl)}" target="_blank" rel="noopener">Pay invoice ${esc(q.number)} →</a>` : ""}
-        ${lastQuotePdf ? `<button class="btn navy" data-act="download-quote">Download ${doc} (PDF)</button>` : ""}
+        ${q.payUrl ? `<a class="btn primary" href="${esc(q.payUrl)}" target="_blank" rel="noopener">Pay ${doc} ${icon("right")}</a>` : ""}
+        ${lastQuotePdf ? `<button class="btn" data-act="download-quote">Download PDF</button>` : ""}
       </div>
-      <div class="muted" style="font-size:12px;margin-top:8px">${q.payUrl ? "Once it's paid we'll apply your changes and send you a mockup." : "Reply to the email with your quote to approve it and we'll send your invoice for payment."} Made more changes? You can submit again.</div>
     </div>`;
 }
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 function downloadQuote() {
   if (!lastQuotePdf) return;
   const bytes = Uint8Array.from(atob(lastQuotePdf), c => c.charCodeAt(0));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([bytes], { type:"application/pdf" }));
-  a.download = `${ui.quote?.kind === "invoice" ? "Invoice" : "Quote"} ${ui.quote?.number || ""}.pdf`.trim();
+  a.download = `${cap(ui.quote?.kind || DOC())} ${ui.quote?.number || ""}.pdf`.trim();
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
 function renderStepper() {
-  const n = STEPS.length;
-  $("#stepper").innerHTML = `<div class="steps-title">Your steps</div><div class="steps">${STEPS.map((s, i) => {
+  let lastGroup = "";
+  $("#stepper").innerHTML = `<ol class="steps">${STEPS.map((s, i) => {
       const done = isDone(s.id) && i !== ui.step;
-      return `<button type="button" class="step-btn ${i===ui.step?"current":""} ${done?"done":""}" data-goto="${i}" ${i===ui.step?'aria-current="step"':""} title="${esc(s.label)}"><span class="n">${done?"✓":i+1}</span><span class="t">${esc(s.label)}<span class="s">${esc(stepSub(s))}</span></span></button>`;
-    }).join("")}</div>
-    <div class="progress"><i style="width:${Math.round(ui.step / (n - 1) * 100)}%"></i></div>
-    <div class="steps-foot">Step ${ui.step + 1} of ${n}</div>`;
+      const g = s.group !== lastGroup ? `<li class="steps-group" aria-hidden="true">${s.group}</li>` : ""; lastGroup = s.group;
+      return `${g}<li><button type="button" class="step-btn ${i===ui.step?"current":""} ${done?"done":""}" data-goto="${i}" ${i===ui.step?'aria-current="step"':""}><span class="n">${done ? icon("check") : i+1}</span><span class="t">${esc(s.label)}</span></button></li>`;
+    }).join("")}</ol>
+    <p class="steps-foot">Progress saves automatically</p>`;
 }
 function renderNav() {
   const i = ui.step, n = STEPS.length, prev = STEPS[i-1], next = STEPS[i+1];
   $("#step-nav").innerHTML = `
-    <button type="button" class="btn" data-goto="${i-1}" ${prev?"":"disabled"}>← Back</button>
-    <span class="nav-pos">Step ${i+1} of ${n}</span>
-    ${next ? `<button type="button" class="btn navy" data-goto="${i+1}" data-advance="1">Next: ${esc(next.label)} →</button>` : `<span></span>`}`;
+    <button type="button" class="btn" data-goto="${i-1}" ${prev?"":"disabled"}>${icon("left")} Back</button>
+    <span class="nav-pos">${i+1} of ${n}</span>
+    ${next ? `<button type="button" class="btn navy" data-goto="${i+1}" data-advance="1">Next: ${esc(next.label)} ${icon("right")}</button>` : `<span></span>`}`;
 }
 function renderStep() {
-  const s = cur(), i = ui.step, n = STEPS.length;
-  stepView.innerHTML = s.id === "store" ? storeStepHTML(i, n) : s.id === "review" ? reviewStepHTML(i, n) : columnStepHTML(s, i, n);
+  const s = cur();
+  $("#layout").classList.toggle("no-preview", s.id === "review");
+  stepView.innerHTML = s.id === "stores" ? storesStepHTML() : s.id === "business" ? businessStepHTML() : s.id === "review" ? reviewStepHTML() : columnStepHTML(s);
   document.querySelectorAll("[data-meta]").forEach(el => { const v = state.meta[el.dataset.meta]; if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? ""; });
   renderStepper(); renderNav(); renderPreview();
   if (s.id === "review") { $("#mat-render").innerHTML = matHTML(null); fitRender(); }
   // bring the part of the mat being edited into view in the preview
   const aside = $("#preview"), active = pv.querySelector(".pv-col.active");
-  $("#pv-title").innerHTML = s.col ? `Live preview · <span>${esc(s.label)}</span> highlighted` : "Live preview (layout is approximate)";
+  $("#pv-title").innerHTML = s.col ? `Preview · <span>${esc(s.label)}</span>` : "Preview";
   if (active && aside.scrollHeight > aside.clientHeight) aside.scrollTo({ top: Math.max(0, active.offsetTop - 40), behavior:"smooth" });
   else aside.scrollTo({ top:0 });
 }
@@ -1005,11 +1007,10 @@ function fitRender() {
   r.style.transform = `scale(${sc})`; box.style.height = Math.ceil(H * sc) + "px";
 }
 window.addEventListener("resize", fitRender);
-
 function clearInvalid(fld) { if (!fld) return; fld.classList.remove("invalid"); fld.querySelector(".err")?.remove(); }
-/* Step 1 must have the stores, business and contact details before moving on */
-function validateStore() {
-  const errs = storeErrors();
+/* The stores and business steps must be complete before moving on */
+function validateStep(id) {
+  const errs = STEP_ERRORS[id]?.() || [];
   document.querySelectorAll(".field.invalid").forEach(clearInvalid);
   for (const [sel, msg] of errs) {
     const fld = document.querySelector(sel)?.closest(".field");
@@ -1018,14 +1019,14 @@ function validateStore() {
   if (errs.length) {
     document.querySelector(".field.invalid")?.scrollIntoView({ behavior:"smooth", block:"center" });
     document.querySelector(".field.invalid input, .field.invalid select")?.focus({ preventScroll:true });
-    toast("A few details are needed before you continue");
+    toast("Complete the highlighted fields");
     return false;
   }
   return true;
 }
 function goTo(i, viaNext=false) {
   if (i < 0 || i >= STEPS.length || i === ui.step) return;
-  if (i > ui.step && cur().id === "store" && !validateStore()) return;
+  if (i > ui.step && !validateStep(cur().id)) return;
   if (viaNext) markDone(cur().id);
   ui.step = i; saveUi(); renderStep(); updateCount();
   window.scrollTo({ top:0, behavior:"smooth" });
@@ -1056,7 +1057,7 @@ form.addEventListener("input", e => {
       if (t.dataset.key === "column") {
         save(); updateCount();
         const idx = stepIndex("col:" + val);
-        toast(`Moved "${sec.title || "section"}" to step ${idx+1}: ${STEPS[idx].label}`);
+        toast(`Moved to ${STEPS[idx].label}`);
         renderStep(); return;
       }
       if (t.dataset.key === "color") { save(); renderStep(); updateCount(); return; }
@@ -1071,6 +1072,7 @@ function onClick(e) {
   const b = e.target.closest("[data-act]"); if (!b) return;
   const act = b.dataset.act;
   if (act === "add-sec") return addSection(b.dataset.col);
+  if (act === "opts") { openOpts.has(b.dataset.sec) ? openOpts.delete(b.dataset.sec) : openOpts.add(b.dataset.sec); renderStep(); return; }
   if (act === "submit") return submitBrief();
   if (act === "download-quote") return downloadQuote();
   if (act === "add-store") {
@@ -1119,9 +1121,9 @@ function addSection(column) {
   const el = document.querySelector(`[data-sec-card="${sec.id}"]`); el?.scrollIntoView({behavior:"smooth", block:"center"}); el?.querySelector(".title input")?.focus({ preventScroll:true });
 }
 $("#btn-reset").addEventListener("click", () => {
-  if (!confirm("Reset everything back to the template? Your changes in this browser will be lost.")) return;
+  if (!confirm("Start over? This clears everything you've entered.")) return;
   state = clone(DEFAULT); normalizeState(); collapsed.clear(); ui = { step:0, done:[] };
-  save(); saveUi(); renderStep(); updateCount(); toast("Reset to template");
+  save(); saveUi(); renderStep(); updateCount(); toast("Started over");
   window.scrollTo({ top:0 });
 });
 let toastT; function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 3200); }
@@ -1181,14 +1183,18 @@ function getRecaptchaToken() {
 let sending = false;
 async function submitBrief() {
   if (sending) return;
-  if (!storeValid()) { toast("Please complete your store details first"); goTo(0); setTimeout(validateStore, 450); return; }
+  if (!storeValid()) {
+    const id = storesErrors().length ? "stores" : "business";
+    ui.step = stepIndex(id); saveUi(); renderStep(); updateCount(); window.scrollTo({ top:0 });
+    setTimeout(() => validateStep(id), 300); return;
+  }
   const btn = $("#btn-submit"), st = $("#send-status");
   sending = true; btn.disabled = true; st.className = "send-status"; st.textContent = "Preparing your layout…";
   try {
     const image = await renderMatImage();
-    st.textContent = "Running a quick security check…";
+    st.textContent = "Checking…";
     const recaptchaToken = await getRecaptchaToken();
-    st.textContent = `Sending your brief and preparing your ${DOC()}…`;
+    st.textContent = `Sending and creating your ${DOC()}…`;
     const payload = { ...buildPayload(image), recaptchaToken };
     const r = await fetch(SUBMIT_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await r.json().catch(() => ({}));
@@ -1200,10 +1206,10 @@ async function submitBrief() {
     saveUi();
     sending = false; renderStep(); updateCount();
     $("#send-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    toast(q.number ? `Brief sent – ${q.kind || DOC()} ${q.number} is on its way to ${state.meta.contactEmail}` : `Brief sent – a copy is on its way to ${state.meta.contactEmail}`);
+    toast(q.number ? `Sent. ${cap(q.kind || DOC())} ${q.number} emailed to ${state.meta.contactEmail}` : `Sent. A copy is on its way to ${state.meta.contactEmail}`);
   } catch (err) {
     sending = false; btn.disabled = false;
-    st.className = "send-status error"; st.textContent = `Couldn't send: ${err.message}. Please try again, or contact us if it keeps happening.`;
+    st.className = "send-status error"; st.textContent = `Not sent: ${err.message}. Try again, or email marketing@ankord.com.au.`;
   }
 }
 
