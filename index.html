@@ -28,6 +28,8 @@
   textarea{resize:vertical;min-height:40px;line-height:1.35}
   .btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
   .btn:hover{border-color:#c5cad6;background:#fafbfd}
+  a.btn{text-decoration:none;color:inherit}
+  a.btn.primary{color:#fff}
   .btn:disabled{opacity:.45;cursor:default}
   .btn.primary{background:var(--red);border-color:var(--red);color:#fff}
   .btn.primary:hover{background:#a81a27}
@@ -259,6 +261,72 @@
   .done-box h3{margin:0;font-size:15px;display:flex;align-items:center;gap:6px}
   .done-box p{margin:4px 0 0;font-size:13px}
 
+  /* ---------- after submit: progress + confirmation (full-width, no stepper or preview) ---------- */
+  .layout.finish-mode{grid-template-columns:minmax(0,1fr)}
+  .layout.finish-mode .stepper,.layout.finish-mode .preview{display:none}
+  .finish{max-width:680px;margin:24px auto 56px}
+  .finish h1{margin:0;font-size:30px;line-height:1.15;font-weight:700;color:var(--navy);letter-spacing:-.015em;text-wrap:balance}
+  .finish .lede{margin:8px 0 0;color:#4a5263;font-size:15px;max-width:60ch}
+  .linkish{border:none;background:none;padding:0;color:var(--accent);font:inherit;font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .resubmit-note{margin:0 0 16px;padding:10px 12px;background:#f7f8fa;border-radius:8px;font-size:13px;color:#4a5263}
+
+  /* progress: a vertical track; the line fills in as each stage completes */
+  .stages{list-style:none;margin:28px 0 0;padding:0}
+  .stage{--dot:28px;position:relative;display:flex;align-items:center;gap:14px;padding:0 0 26px;color:var(--muted);transition:color .3s}
+  .stage:last-child{padding-bottom:0}
+  .stage::before,.stage::after{content:"";position:absolute;left:calc(var(--dot) / 2 - 1px);top:var(--dot);width:2px;height:calc(100% - var(--dot))}
+  .stage::before{background:var(--line)}
+  .stage::after{background:var(--ok);transform:scaleY(0);transform-origin:top;transition:transform .5s cubic-bezier(.22,1,.36,1)}
+  .stage:last-child::before,.stage:last-child::after{display:none}
+  .stage.done::after{transform:scaleY(1)}
+  .stage-dot{width:var(--dot);height:var(--dot);border-radius:50%;border:2px solid #cfd4de;background:#fff;display:grid;place-items:center;flex:none;position:relative;transition:background .3s,border-color .3s}
+  .stage-dot .i{width:15px;height:15px;stroke-width:3;color:#fff;grid-area:1/1;opacity:0}
+  .stage-label{font-size:15px;font-weight:500}
+  .stage.active{color:var(--navy)}
+  .stage.active .stage-label{font-weight:600}
+  .stage.active .stage-dot{border-color:rgba(196,32,46,.2)}
+  .stage.active .stage-dot::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid transparent;border-top-color:var(--red);animation:spin .8s linear infinite}
+  .stage.done{color:var(--ink)}
+  .stage.done .stage-dot{background:var(--ok);border-color:var(--ok)}
+  .stage.done .stage-dot .i:first-child{opacity:1;stroke-dasharray:24;stroke-dashoffset:24;animation:draw .35s cubic-bezier(.22,1,.36,1) forwards}
+  .stage.error{color:var(--red)}
+  .stage.error .stage-dot{background:var(--red);border-color:var(--red)}
+  .stage.error .stage-dot .i:last-child{opacity:1}
+  .stage-error{margin-top:24px;padding:14px 16px;border:1px solid #f3c6ca;background:#fdf3f4;border-radius:10px;color:#7d1720}
+  .stage-error p{margin:0}
+  .stage-error .actions{margin-top:12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes draw{to{stroke-dashoffset:0}}
+
+  /* confirmation */
+  .done-mark{width:56px;height:56px;border-radius:50%;background:var(--ok);display:grid;place-items:center;margin-bottom:18px;animation:pop .5s cubic-bezier(.22,1,.36,1) both}
+  .done-mark .i{width:28px;height:28px;stroke-width:3;color:#fff;stroke-dasharray:24;stroke-dashoffset:24;animation:draw .4s .25s cubic-bezier(.22,1,.36,1) forwards}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+  .invoice-card{margin:26px 0 0;border-color:#cfd4de;box-shadow:0 2px 10px rgba(20,30,60,.06)}
+  .invoice-card .body{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:20px 22px}
+  .inv-meta{display:flex;flex-direction:column;gap:2px}
+  .inv-no{font-size:13px;font-weight:600;color:var(--muted)}
+  .inv-total{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+  .inv-sub{font-size:13px;color:var(--muted)}
+  .inv-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .finish h2.group{margin-top:36px}
+  .next-steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  .next-steps li{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .next-steps li.now{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
+  .next-steps .num{width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--navy);font-weight:700;font-size:13px;display:grid;place-items:center;flex:none}
+  .next-steps li.now .num{background:var(--navy);color:#fff}
+  .next-steps b{font-size:15px;color:var(--navy)}
+  .next-steps p{margin:3px 0 0;font-size:13.5px;color:#4a5263}
+  .now-tag{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:600;vertical-align:2px}
+  .done-actions{margin-top:22px}
+  @media (max-width:700px){ .finish{margin:8px auto 40px} .finish h1{font-size:25px} .invoice-card .body{padding:16px} .inv-actions,.inv-actions .btn{width:100%;justify-content:center} }
+  .preview-bar{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:center;padding:7px 12px;background:#fff4d6;color:#5c4200;font-size:13px;font-weight:500;border-bottom:1px solid #f1d9ab}
+  .preview-bar a{color:#5c4200;text-underline-offset:3px}
+  @media (prefers-reduced-motion:reduce){
+    .stage.active .stage-dot::after{animation:none;border-color:var(--red)}
+    .stage::after,.done-mark,.done-mark .i,.stage.done .stage-dot .i:first-child{animation:none;transition:none;stroke-dashoffset:0}
+  }
+
   /* preview */
   .preview{position:sticky;top:calc(var(--topbar-h) + 20px);align-self:start;max-height:calc(100vh - var(--topbar-h) - 40px);overflow:auto;border-radius:10px;background:var(--navy-2);padding:12px;border:1px solid #0b152a}
   .preview h3{margin:0 0 10px;color:#9fb0cc;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
@@ -458,6 +526,9 @@ const DESIGN_TEAM = "the Ankor'd design team";    // how the recipient is descri
 const RECAPTCHA_SITE_KEY = "6LfNPbAtAAAAAOil4sqqR-kSuGDs-WqF8sbNitSX";
 const STORAGE_KEY = "mm-mat-builder-v1";
 const UI_KEY = STORAGE_KEY + "-ui";
+const PDF_KEY = STORAGE_KEY + "-pdf";     // last invoice PDF, kept for this browser tab only
+/* ?preview=progress or ?preview=done shows the after-submit screens with sample data. Nothing is saved or sent. */
+const PREVIEW = ["progress","done"].includes(new URLSearchParams(location.search).get("preview")) ? new URLSearchParams(location.search).get("preview") : null;
 /* Parts of the mat header that are the same on every store's mat and can't be edited in the form */
 const FIXED_META = ["headline1","headline2","tagline","gst"];
 
@@ -551,7 +622,7 @@ const DEFAULT = {
       { num:"1", label:"Essential Service",  desc:"Battery\nGasket",                                   price:"$30", save:"SAVE $8",  featured:false },
       { num:"2", label:"Protection Service", desc:"Battery\nGasket\nAir leak test or Clean",           price:"$40", save:"SAVE $27", featured:true  },
       { num:"3", label:"Full Service",       desc:"Battery\nGasket\nAir leak test\nWatch clean",       price:"$55", save:"SAVE $42", featured:false },
-    ],{badge:"SAVE UP TO $42", footnote:"ALL G-SHOCK WATCHES ADDITIONAL $10 · BLACKTOWN & STANHOPE VILLAGE ONLY"}),
+    ],{badge:"SAVE UP TO $42", footnote:"ALL G-SHOCK WATCHES ADDITIONAL $10"}),
     S("watchbat","WATCH BATTERIES & BANDS","green","4","list",[
       I("Battery Supplied & Fitted","$26.95",true), I("Car Keys & Remote Batteries Fitted","$29.95",true), I("G-Shock – 1 / 2 Batteries","$34.95 / $39.95"),
       I("Band Adjustment – Standard","$20",true), I("Band Adjustment – Stretch","$25"), I("Band X Straps","$19.95 - $49.95")
@@ -571,7 +642,7 @@ const DEFAULT = {
     S("tags","TAGS, PLATES & BADGES","lightblue","5","list",[
       I("Pet Tag – Plain / Designer","$20 / $25",true), I("Army Dog Tag – chain & engraving","$29.95"), I("Plates & Tags – Anodised / Brass","$6 / $8"),
       I("Name Badge – Pin / Magnet","From $30 / $35"), I("Custom Logo / Photo Set-Up","$65 / $55")
-    ],{footnote:"Engraving prices exclusive to Mister Minit Blacktown & Stanhope Village\nNot in conjunction with any other offer · trial promotion, pricing may change", footnotePlain:true}),
+    ],{footnote:"Not in conjunction with any other offer", footnotePlain:true}),
     // ---- Bottom band
     S("combos","VALUE COMBO DEALS","blue","bottom","combos",[
       { label:"Key Pack",          desc:"3 or more get 10% off\n6 or more get 15% off\n9 or more get 20% off", was:"$90",  price:"$72",  save:"SAVE $18", note:"" },
@@ -607,9 +678,16 @@ function normalizeState() {
   }
   if (!state.meta.firstName && old.contactName) [state.meta.firstName, state.meta.lastName = ""] = String(old.contactName).trim().split(/\s+(.*)/);
   for (const k of ["store1","store2","contactName","matSize"]) delete state.meta[k];
+  // briefs saved before the template dropped the Blacktown / Stanhope Village footnotes get the new wording,
+  // unless the store already edited them
+  const OLD_FOOT = {
+    watchpk: "ALL G-SHOCK WATCHES ADDITIONAL $10 · BLACKTOWN & STANHOPE VILLAGE ONLY",
+    tags: "Engraving prices exclusive to Mister Minit Blacktown & Stanhope Village\nNot in conjunction with any other offer · trial promotion, pricing may change",
+  };
+  for (const sec of state.sections || []) if (OLD_FOOT[sec.id] && sec.footnote === OLD_FOOT[sec.id]) sec.footnote = DEFAULT.sections.find(d => d.id === sec.id).footnote;
 }
 normalizeState();
-const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} };
+const save = () => { if (PREVIEW) return; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} };
 
 const DEF_SEC = new Map(DEFAULT.sections.map(s => [s.id, s]));
 const DEF_ITEM = new Map(); DEFAULT.sections.forEach(s => s.items.forEach(i => DEF_ITEM.set(i.id, i)));
@@ -679,7 +757,7 @@ let ui;
 try { ui = JSON.parse(localStorage.getItem(UI_KEY)); } catch(e) { ui = null; }
 if (!ui || typeof ui.step !== "number" || !Array.isArray(ui.done)) ui = { step:0, done:[] };
 ui.step = Math.min(Math.max(0, ui.step | 0), STEPS.length - 1);
-const saveUi = () => { try { localStorage.setItem(UI_KEY, JSON.stringify(ui)); } catch(e) {} };
+const saveUi = () => { if (PREVIEW) return; try { localStorage.setItem(UI_KEY, JSON.stringify(ui)); } catch(e) {} };
 const cur = () => STEPS[ui.step];
 const isDone = id => ui.done.includes(id);
 const markDone = id => { if (id !== "review" && !isDone(id)) ui.done.push(id); };
@@ -914,7 +992,7 @@ function reviewStepHTML() {
       <h2 class="group">Your mat <span class="hint">Layout only – the designer produces the final artwork</span></h2>
       <div class="mat-render-box" id="mat-render-box"><div class="mat-render mat-wide" id="mat-render"></div></div>
       <details class="more"><summary>${icon("right")} Compare with a finished mat</summary>
-        <img class="example-img" src="${EXAMPLE_MAT}" alt="Finished Mister Minit price mat (Blacktown / Stanhope Village)" loading="lazy"></details>
+        <img class="example-img" src="${EXAMPLE_MAT}" alt="Example of a finished Mister Minit price mat" loading="lazy"></details>
       <details class="more"><summary>${icon("right")} Changes from the template (${d.length})</summary>
         ${d.length ? `<ol class="changes">${d.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : `<p class="muted">None. The template will be used as-is with your store names.</p>`}</details>
     </div></section>
@@ -923,7 +1001,7 @@ function reviewStepHTML() {
       <textarea id="f-notes" data-meta="notes" rows="3" placeholder="e.g. We don't offer Birkenstock repairs"></textarea>
     </div></section>
     <section class="card send-card" id="send-card"><div class="body">
-      ${ui.submittedAt ? submittedHTML() : ""}
+      ${ui.submittedAt ? `<p class="resubmit-note">Submitted ${esc(fmtWhen(ui.submittedAt))}${ui.quote?.number ? ` · ${cap(ui.quote.kind || DOC())} ${esc(ui.quote.number)}` : ""}. Submitting again creates a new ${DOC()}. <button class="linkish" data-act="view-done">View confirmation</button></p>` : ""}
       <h2 class="group">Order</h2>
       ${orderSummaryHTML()}
       <p class="meta-line">Deliver to ${esc(deliveryText() || "–")}</p>
@@ -944,23 +1022,83 @@ const deliveryText = () => {
   const m = state.meta, p = m.deliverySame ? "bill" : "del";
   return [norm(m[p+"Street"]), [m[p+"Suburb"], m[p+"State"], m[p+"Postcode"]].map(norm).filter(Boolean).join(" ")].filter(Boolean).join(", ");
 };
-/* Shown on the submit card once sent: the invoice / quote number, total, and the pay link / PDF */
-let lastQuotePdf = null;     // base64 PDF from the last submit – kept in memory only
-function submittedHTML() {
-  const q = ui.quote, doc = q?.kind || DOC();
-  const when = esc(new Date(ui.submittedAt).toLocaleString("en-AU", { dateStyle:"medium", timeStyle:"short" }));
-  if (!q?.number) return `<div class="done-box"><h3>${icon("check")} Brief sent</h3><p>${when}. Your ${doc} will be emailed to ${esc(state.meta.contactEmail)} shortly.</p></div>`;
-  return `<div class="done-box">
-      <h3>${icon("check")} Brief sent · ${cap(doc)} ${esc(q.number)}</h3>
-      <p>${money(q.total)} incl. GST · emailed to ${esc(state.meta.contactEmail)} · ${when}</p>
-      <div class="actions">
-        ${q.payUrl ? `<a class="btn primary" href="${esc(q.payUrl)}" target="_blank" rel="noopener">Pay ${doc} ${icon("right")}</a>` : ""}
-        ${lastQuotePdf ? `<button class="btn" data-act="download-quote">Download PDF</button>` : ""}
-      </div>
-    </div>`;
-}
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const fmtWhen = iso => new Date(iso).toLocaleString("en-AU", { dateStyle:"medium", timeStyle:"short" });
+const fmtDate = ymd => new Date(ymd + "T00:00:00").toLocaleDateString("en-AU", { day:"numeric", month:"short", year:"numeric" });
+
+/* ===================== AFTER SUBMIT ===================== */
+/* Progress screen: one row per real stage of the submission. The server creates the invoice and then
+   emails it inside one request, so those last two rows advance on a timer while we wait for it. */
+let progress = null;       // { stage, error? } while submitting
+const STAGES = () => [
+  "Preparing your mat layout",
+  "Running a security check",
+  "Sending your brief to Ankor'd",
+  `Creating your ${DOC()} in Xero`,
+  `Emailing your ${DOC()} to ${state.meta.contactEmail || "you"}`,
+];
+function progressHTML() {
+  return `<section class="finish" aria-live="polite">
+      <h1>Submitting your brief</h1>
+      <p class="lede">This usually takes under a minute. Keep this page open.</p>
+      <ol class="stages">${STAGES().map((label, i) => `<li class="stage" data-stage="${i}"><span class="stage-dot">${icon("check")}${icon("x")}</span><span class="stage-label">${esc(label)}</span></li>`).join("")}</ol>
+      <div class="stage-error" id="stage-error" hidden></div>
+    </section>`;
+}
+function paintProgress() {
+  if (!progress) return;
+  document.querySelectorAll(".stage").forEach(li => {
+    const i = +li.dataset.stage;
+    li.className = "stage " + (progress.error && i === progress.stage ? "error" : i < progress.stage ? "done" : i === progress.stage ? "active" : "pending");
+  });
+  const box = $("#stage-error");
+  if (box) {
+    box.hidden = !progress.error;
+    if (progress.error) box.innerHTML = `<p><b>Not sent.</b> ${esc(progress.error)}</p>
+      <div class="actions"><button class="btn primary" data-act="submit">Try again</button><button class="btn" data-act="cancel-progress">Back to review</button></div>
+      <p class="fine-print">Still stuck? Email <a href="mailto:marketing@ankord.com.au">marketing@ankord.com.au</a>.</p>`;
+  }
+}
+const setStage = i => { progress.stage = i; paintProgress(); };
+
+/* Confirmation: the invoice, how to pay it, and what happens next */
+function doneHTML() {
+  const q = ui.quote || {}, doc = q.kind || DOC(), isInv = doc === "invoice";
+  const email = esc(state.meta.contactEmail), mats = totalMats(), deliver = esc(deliveryText() || "your nominated address");
+  const steps = [
+    isInv ? ["Pay your invoice", q.payUrl ? "Use the Pay button above, or the link in your email." : "Pay using the details on your invoice."]
+          : ["Approve your quote", "Reply to the quote email to approve it. We'll then send your invoice to pay."],
+    ["We email your mockup", `Once payment clears, we apply your changes and email a mockup to ${email}.`],
+    ["Approve it, and we print & ship", `Reply to approve the mockup. We print your ${mats} mat${mats===1?"":"s"} and ship ${mats===1?"it":"them"} to ${deliver}.`],
+  ];
+  return `<section class="finish done">
+      <div class="done-mark" aria-hidden="true">${icon("check")}</div>
+      <h1>Brief sent</h1>
+      <p class="lede">${q.number ? `${cap(doc)} <b>${esc(q.number)}</b> has been emailed to <b>${email}</b>.` : `We've received your brief. Your ${doc} will be emailed to <b>${email}</b> shortly.`}</p>
+      ${q.number ? `<div class="card invoice-card"><div class="body">
+          <div class="inv-meta">
+            <span class="inv-no">${cap(doc)} ${esc(q.number)}</span>
+            <span class="inv-total">${money(q.total)}</span>
+            <span class="inv-sub">AUD incl. GST${q.due ? ` · ${isInv ? "Due" : "Valid until"} ${esc(fmtDate(q.due))}` : ""}</span>
+          </div>
+          <div class="inv-actions">
+            ${q.payUrl ? `<a class="btn primary big" href="${esc(q.payUrl)}" target="_blank" rel="noopener" data-act="pay">Pay ${doc} ${icon("right")}</a>` : ""}
+            <button class="btn big" data-act="download-quote" ${lastQuotePdf ? "" : "disabled title=\"The PDF is in your email\""}>Download PDF</button>
+          </div>
+        </div></div>` : ""}
+      <h2 class="group">What happens next</h2>
+      <ol class="next-steps">${steps.map(([t, d], i) => `<li class="${i === 0 ? "now" : ""}"><span class="num">${i+1}</span><div><b>${esc(t)}</b>${i === 0 ? ` <span class="now-tag">Next</span>` : ""}<p>${d}</p></div></li>`).join("")}</ol>
+      <p class="meta-line">${esc(storeName())} · ${mats} mat${mats===1?"":"s"} · submitted ${esc(fmtWhen(ui.submittedAt))}</p>
+      <div class="actions done-actions">
+        <button class="btn" data-act="back-to-brief">${icon("left")} Back to my brief</button>
+        <a class="btn ghost" href="mailto:marketing@ankord.com.au">Questions? Email us</a>
+      </div>
+    </section>`;
+}
+let lastQuotePdf = null;
+try { lastQuotePdf = sessionStorage.getItem(PDF_KEY); } catch(e) {}
 function downloadQuote() {
+  if (PREVIEW) return toast("Preview: this downloads the invoice PDF");
   if (!lastQuotePdf) return;
   const bytes = Uint8Array.from(atob(lastQuotePdf), c => c.charCodeAt(0));
   const a = document.createElement("a");
@@ -987,7 +1125,14 @@ function renderNav() {
     ${next ? `<button type="button" class="btn navy" data-goto="${i+1}" data-advance="1">Next: ${esc(next.label)} ${icon("right")}</button>` : `<span></span>`}`;
 }
 function renderStep() {
-  const s = cur();
+  const s = cur(), finishing = !!progress || ui.view === "done";
+  $("#layout").classList.toggle("finish-mode", finishing);
+  if (finishing) {
+    stepView.innerHTML = progress ? progressHTML() : doneHTML();
+    $("#step-nav").innerHTML = "";
+    if (progress) paintProgress();
+    return;
+  }
   $("#layout").classList.toggle("no-preview", s.id === "review");
   stepView.innerHTML = s.id === "stores" ? storesStepHTML() : s.id === "business" ? businessStepHTML() : s.id === "review" ? reviewStepHTML() : columnStepHTML(s);
   document.querySelectorAll("[data-meta]").forEach(el => { const v = state.meta[el.dataset.meta]; if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? ""; });
@@ -1075,6 +1220,10 @@ function onClick(e) {
   if (act === "opts") { openOpts.has(b.dataset.sec) ? openOpts.delete(b.dataset.sec) : openOpts.add(b.dataset.sec); renderStep(); return; }
   if (act === "submit") return submitBrief();
   if (act === "download-quote") return downloadQuote();
+  if (act === "pay" && PREVIEW) { e.preventDefault(); return toast("Preview: this opens the invoice in Xero to pay"); }
+  if (act === "view-done") { ui.view = "done"; saveUi(); renderStep(); window.scrollTo({ top:0 }); return; }
+  if (act === "back-to-brief") { if (PREVIEW) { location.href = location.pathname; return; } ui.view = null; ui.step = stepIndex("review"); saveUi(); renderStep(); updateCount(); window.scrollTo({ top:0 }); return; }
+  if (act === "cancel-progress") { progress = null; renderStep(); return; }
   if (act === "add-store") {
     const st = { id:uid(), line1:"", line2:"", qty:1 };
     state.stores.push(st); save(); renderStep(); updateCount();
@@ -1122,7 +1271,8 @@ function addSection(column) {
 }
 $("#btn-reset").addEventListener("click", () => {
   if (!confirm("Start over? This clears everything you've entered.")) return;
-  state = clone(DEFAULT); normalizeState(); collapsed.clear(); ui = { step:0, done:[] };
+  state = clone(DEFAULT); normalizeState(); collapsed.clear(); ui = { step:0, done:[] }; progress = null;
+  lastQuotePdf = null; try { sessionStorage.removeItem(PDF_KEY); } catch(e) {}
   save(); saveUi(); renderStep(); updateCount(); toast("Started over");
   window.scrollTo({ top:0 });
 });
@@ -1181,36 +1331,59 @@ function getRecaptchaToken() {
   });
 }
 let sending = false;
+const wait = ms => new Promise(r => setTimeout(r, ms));
 async function submitBrief() {
   if (sending) return;
+  if (PREVIEW) return runPreview();
   if (!storeValid()) {
     const id = storesErrors().length ? "stores" : "business";
-    ui.step = stepIndex(id); saveUi(); renderStep(); updateCount(); window.scrollTo({ top:0 });
+    progress = null; ui.step = stepIndex(id); saveUi(); renderStep(); updateCount(); window.scrollTo({ top:0 });
     setTimeout(() => validateStep(id), 300); return;
   }
-  const btn = $("#btn-submit"), st = $("#send-status");
-  sending = true; btn.disabled = true; st.className = "send-status"; st.textContent = "Preparing your layout…";
+  sending = true; progress = { stage:0 }; renderStep(); window.scrollTo({ top:0 });
+  const timers = [];
   try {
     const image = await renderMatImage();
-    st.textContent = "Checking…";
+    setStage(1);
     const recaptchaToken = await getRecaptchaToken();
-    st.textContent = `Sending and creating your ${DOC()}…`;
+    setStage(2);
     const payload = { ...buildPayload(image), recaptchaToken };
+    timers.push(setTimeout(() => setStage(3), 1500), setTimeout(() => setStage(4), 6000));
     const r = await fetch(SUBMIT_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await r.json().catch(() => ({}));
-    if (!r.ok || !data.ok) throw new Error(data.error || `the server replied ${r.status}`);
+    timers.forEach(clearTimeout);
+    if (!r.ok || !data.ok) throw new Error(data.error || `The server replied ${r.status}.`);
+    setStage(STAGES().length);           // every row ticked
     const q = data.quote || {};
     lastQuotePdf = q.pdf || null;
+    try { lastQuotePdf ? sessionStorage.setItem(PDF_KEY, lastQuotePdf) : sessionStorage.removeItem(PDF_KEY); } catch(e) {}
     ui.submittedAt = payload.submittedAt;
-    ui.quote = { kind: q.kind, number: q.number, total: q.total, includesGst: q.includesGst, payUrl: q.payUrl };
-    saveUi();
-    sending = false; renderStep(); updateCount();
-    $("#send-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    toast(q.number ? `Sent. ${cap(q.kind || DOC())} ${q.number} emailed to ${state.meta.contactEmail}` : `Sent. A copy is on its way to ${state.meta.contactEmail}`);
+    ui.quote = { kind: q.kind, number: q.number, total: q.total, includesGst: q.includesGst, payUrl: q.payUrl, due: q.due };
+    await wait(900);
+    progress = null; ui.view = "done"; saveUi();
+    sending = false; renderStep(); updateCount(); window.scrollTo({ top:0 });
   } catch (err) {
-    sending = false; btn.disabled = false;
-    st.className = "send-status error"; st.textContent = `Not sent: ${err.message}. Try again, or email marketing@ankord.com.au.`;
+    timers.forEach(clearTimeout);
+    sending = false; progress.error = err.message; paintProgress();
   }
+}
+
+/* Preview mode: sample order + invoice, and a simulated run of the progress screen */
+function setupPreview() {
+  if (!storeName()) state.stores = [{ id:"p1", line1:"PENRITH", line2:"", qty:1 }, { id:"p2", line1:"BLACKTOWN", line2:"WESTPOINT", qty:2 }];
+  if (!EMAIL_RE.test(norm(state.meta.contactEmail))) Object.assign(state.meta, { firstName:"Sam", contactEmail:"sam@example.com", billStreet:"1 High St", billSuburb:"Penrith", billState:"NSW", billPostcode:"2750", deliverySame:true });
+  const due = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+  ui = { ...ui, view: PREVIEW === "done" ? "done" : null, submittedAt: new Date().toISOString(),
+    quote: { kind: DOC(), number: DOC() === "invoice" ? "INV-0000" : "QU-0000", total: orderLines().total, includesGst: true, payUrl: "#preview", due } };
+  lastQuotePdf = "preview";
+  document.body.insertAdjacentHTML("afterbegin", `<div class="preview-bar" role="status">Preview – nothing is sent or saved.
+    <a href="?preview=progress">Replay progress</a><a href="?preview=done">Confirmation</a><a href="${location.pathname}">Exit</a></div>`);
+}
+async function runPreview() {
+  progress = { stage:0 }; renderStep(); window.scrollTo({ top:0 });
+  for (const ms of [1400, 700, 1100, 1800, 1400]) { await wait(ms); setStage(progress.stage + 1); }
+  await wait(900);
+  progress = null; ui.view = "done"; renderStep();
 }
 
 /* ===================== DIFF / SUMMARY ===================== */
@@ -1299,7 +1472,9 @@ window.addEventListener("beforeprint", preparePrint);
 const topbar = $("#topbar");
 const setTopbarHeight = () => document.documentElement.style.setProperty("--topbar-h", topbar.offsetHeight + "px");
 setTopbarHeight(); window.addEventListener("resize", setTopbarHeight); window.addEventListener("load", setTopbarHeight);
+if (PREVIEW) setupPreview();
 renderStep(); updateCount();
+if (PREVIEW === "progress") runPreview();
 if (location.hash === "#print") { preparePrint(); }   // lets the page be rendered straight to PDF (e.g. headless Chrome)
 </script>
 </body>

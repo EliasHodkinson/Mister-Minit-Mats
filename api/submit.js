@@ -147,6 +147,7 @@ export function publicQuote({ order, doc }, env) {
     subTotal: doc?.subTotal ?? q.subTotal, gst: doc?.tax ?? q.gst, total: doc?.total ?? q.total, includesGst: q.includesGst,
     pdf: doc?.pdf ? doc.pdf.toString("base64") : null,
     payUrl: doc?.payUrl || null,
+    due: doc?.due || null,
   };
 }
 
