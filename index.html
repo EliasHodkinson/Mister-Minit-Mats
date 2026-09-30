@@ -133,6 +133,34 @@
   .field.changed input,.field.changed textarea{border-color:var(--warn);background:#fff9f0}
   .field.invalid input{border-color:var(--red);background:#fff5f5}
   .field .err{font-size:11.5px;color:var(--red);margin-top:3px;font-weight:500}
+  input[type=number]{width:100%;border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:#fff}
+  input[type=number]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(30,95,168,.15)}
+  .grid4{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px 14px}
+  @media (max-width:700px){ .grid4{grid-template-columns:1fr 1fr} .grid4 .span-all{grid-column:1/-1} }
+  .span-all{grid-column:1/-1}
+  /* stores: one row per store the owner is ordering for */
+  .store-row{display:grid;grid-template-columns:28px minmax(0,1.3fr) minmax(0,1.3fr) 90px 30px;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+  .store-row:first-of-type{padding-top:0}
+  .store-row .no{width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:24px}
+  .store-row .ico{margin-top:24px}
+  @media (max-width:700px){ .store-row{grid-template-columns:24px minmax(0,1fr) 70px 26px} .store-row .l2{grid-column:2/4;grid-row:2} }
+  .add-store{margin-top:10px}
+  .mat-size{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg);border-radius:8px;padding:9px 12px;margin-top:12px;font-size:13px}
+  .mat-size b{color:var(--navy)}
+  .check-line{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin:12px 0 4px}
+  /* order summary */
+  .order{width:100%;border-collapse:collapse;font-size:13px}
+  .order td{padding:7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  .order td.amt{text-align:right;white-space:nowrap;padding-left:12px;font-weight:600}
+  .order td .d{display:block;font-size:11.5px;color:var(--muted);white-space:pre-line}
+  .order tr.tot td{border-bottom:none;padding:3px 0;color:var(--muted)}
+  .order tr.tot td.amt{font-weight:500}
+  .order tr.grand td{font-size:15px;font-weight:700;color:var(--navy);padding-top:8px;border-top:2px solid var(--navy)}
+  .quote-box{background:#eaf8ee;border:1px solid #b9e3c3;border-radius:8px;padding:12px 14px;margin:0 0 12px}
+  .quote-box h3{margin:0 0 6px;font-size:15px;color:#155b2b}
+  .quote-box .actions{margin-top:10px}
+  ol.next{margin:6px 0 0 18px;padding:0;font-size:13px;color:#3c4556}
+  ol.next li{margin:4px 0}
 
   h2.group{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px;display:flex;align-items:center;gap:10px}
   h2.group::after{content:"";flex:1;height:1px;background:var(--line)}
@@ -437,12 +465,16 @@ const I = (label, price, hl=false) => ({ label, price, hl });
 
 const DEFAULT = {
   meta: {
-    store1:"BLACKTOWN", store2:"STANHOPE VILLAGE",
     headline1:"FIXED", headline2:"WHILE YOU WAIT",
     tagline:"KEYS • CAR KEYS • SHOE REPAIR • WATCH SERVICE • ENGRAVING • SHARPENING",
     gst:"ALL PRICES INCLUDE GST",
-    contactName:"", contactEmail:"", contactPhone:"", matSize:"800 x 400 mm", notes:""
+    legalName:"", tradingName:"", abn:"", firstName:"", lastName:"", contactEmail:"", contactPhone:"",
+    billStreet:"", billSuburb:"", billState:"", billPostcode:"",
+    deliverySame:true, delStreet:"", delSuburb:"", delState:"", delPostcode:"",
+    notes:""
   },
+  /* the stores this owner is ordering mats for – each mat is the same design with that store's name */
+  stores: [ { id:"store-1", line1:"", line2:"", qty:1 } ],
   sections: [
     // ---- Column 1
     S("house","HOUSE & DOMESTIC KEYS","orange","1","list",[
@@ -540,8 +572,16 @@ try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { state 
 if (!state || !state.sections) state = clone(DEFAULT);
 /* make sure the fixed header text can never drift from the template, and every meta field exists */
 function normalizeState() {
-  state.meta = { ...clone(DEFAULT.meta), ...(state.meta || {}) };
+  const old = state.meta || {};
+  state.meta = { ...clone(DEFAULT.meta), ...old };
   for (const k of FIXED_META) state.meta[k] = DEFAULT.meta[k];
+  if (!Array.isArray(state.stores) || !state.stores.length) {
+    // briefs saved before multi-store kept one store name in meta; keep it unless it's the old template name
+    const kept = old.store1 && !/^blacktown$/i.test(old.store1.trim());
+    state.stores = [{ id:"store-1", line1: kept ? old.store1 : "", line2: kept ? (old.store2 || "") : "", qty:1 }];
+  }
+  if (!state.meta.firstName && old.contactName) [state.meta.firstName, state.meta.lastName = ""] = String(old.contactName).trim().split(/\s+(.*)/);
+  for (const k of ["store1","store2","contactName","matSize"]) delete state.meta[k];
 }
 normalizeState();
 const save = () => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {} };
@@ -555,13 +595,53 @@ const norm = v => (typeof v === "boolean") ? v : String(v ?? "").trim();
 const itemChanges = (sec, it) => { const d = DEF_ITEM.get(it.id); if (!d) return null; return ITEM_KEYS[sec.kind].filter(k => norm(it[k]) !== norm(d[k])); };
 const secChanges = sec => { const d = DEF_SEC.get(sec.id); if (!d) return null; return SEC_KEYS.filter(k => norm(sec[k]) !== norm(d[k])); };
 const findSec = id => state.sections.find(s => s.id === id);
-const storeName = () => [state.meta.store1, state.meta.store2].filter(Boolean).join(" ");
+const storeLabel = st => [st.line1, st.line2].map(norm).filter(Boolean).join(" ");
+const storeName = () => state.stores.map(storeLabel).filter(Boolean).join(", ");
+const findStore = id => state.stores.find(st => st.id === id);
+
+/* ===================== PRICING ===================== */
+/* Shown in the order summary. The quote itself is priced on the server; these defaults are replaced by
+   /api/pricing on load so the page always shows what the quote will say. */
+const MAT_SIZE = "800 x 400 mm";
+const MAX_STORES = 20, MAX_QTY = 20;
+const AU_STATES = ["ACT","NSW","NT","QLD","SA","TAS","VIC","WA"];
+let PRICING = { first:250, extra:150, freight:25, includesGst:true, gstRate:0.1, designMinutes:45 };
+const money = n => "$" + Number(n || 0).toLocaleString("en-AU", { minimumFractionDigits:2, maximumFractionDigits:2 });
+const totalMats = () => state.stores.reduce((n, st) => n + (Math.floor(+st.qty) || 0), 0);
+function orderLines() {
+  const mats = totalMats(), p = PRICING, lines = [];
+  if (mats >= 1) lines.push({ label:`Mister Minit price mat – ${MAT_SIZE}`, desc:`First mat · includes up to ${p.designMinutes} minutes of design time for your changes`, qty:1, unit:p.first });
+  if (mats >= 2) lines.push({ label:`Additional mat${mats > 2 ? "s" : ""} – ${MAT_SIZE}`, desc:"Same design with each store's name", qty:mats-1, unit:p.extra });
+  if (mats >= 1 && p.freight > 0) lines.push({ label:"Freight", desc:"", qty:1, unit:p.freight });
+  lines.forEach(l => l.amount = Math.round(l.qty * l.unit * 100) / 100);
+  const sum = lines.reduce((n, l) => n + l.amount, 0);
+  const gst = p.includesGst ? sum / (1 + 1 / p.gstRate) : sum * p.gstRate;
+  return { lines, mats, sub: p.includesGst ? sum - gst : sum, gst, total: p.includesGst ? sum : sum + gst };
+}
+function orderSummaryHTML(q = orderLines()) {
+  if (!q.lines.length) return `<p class="muted" style="margin:0">Add a quantity for at least one store to see your price.</p>`;
+  return `<table class="order">${q.lines.map(l => `<tr><td>${esc(l.label)}${l.qty > 1 ? ` <b>× ${l.qty}</b>` : ""}${l.desc ? `<span class="d">${esc(l.desc)}</span>` : ""}</td><td class="amt">${money(l.amount)}</td></tr>`).join("")}
+    <tr class="tot"><td>${PRICING.includesGst ? "Total excl. GST" : "Subtotal"}</td><td class="amt">${money(q.sub)}</td></tr>
+    <tr class="tot"><td>${PRICING.includesGst ? "Includes GST" : "GST"}</td><td class="amt">${money(q.gst)}</td></tr>
+    <tr class="grand"><td>Total (AUD)</td><td class="amt">${money(q.total)}</td></tr></table>`;
+}
+const refreshOrder = () => { const el = $("#order-summary"); if (el) el.innerHTML = orderSummaryHTML(); };
+fetch(SUBMIT_URL.replace(/submit$/, "pricing")).then(r => r.ok ? r.json() : null).then(d => {
+  if (d?.pricing) { PRICING = { ...PRICING, ...d.pricing }; refreshOrder(); }
+}).catch(() => {});
+
+/* ABN: 11 digits with the ATO checksum */
+const abnDigits = s => String(s ?? "").replace(/\D/g, "");
+function isValidAbn(s) {
+  const d = abnDigits(s), W = [10,1,3,5,7,9,11,13,15,17,19];
+  return d.length === 11 && [...d].reduce((a, ch, i) => a + (+ch - (i ? 0 : 1)) * W[i], 0) % 89 === 0;
+}
 const colName = c => (COLUMNS.find(([k]) => k === c) || [c, c])[1];
 const colTheme = c => (COLUMNS.find(([k]) => k === c) || [c, c, c])[2];
 
 /* ===================== STEPS ===================== */
 const STEPS = [
-  { id:"store", label:"Store details", sub:"Name & contact" },
+  { id:"store", label:"Store details", sub:"Stores, business & contact" },
   ...COLUMNS.map(([col, name, theme]) => ({ id:"col:"+col, col, label:theme, pos:name })),
   { id:"review", label:"Review & send", sub:"Final check" },
 ];
@@ -656,28 +736,64 @@ const LEGEND = `<div class="legend">
 </div>`;
 
 /* ---- Step 1: store details */
+const field = (key, label, { req=true, hint="", attrs="", cls="" } = {}) =>
+  `<div class="field ${cls}"><label>${label}${req ? '<span class="req">*</span>' : ""}</label><input type="text" data-meta="${key}" ${attrs}>${hint ? `<div class="hint">${hint}</div>` : ""}</div>`;
+const stateSelect = (key, cls="") => `<div class="field ${cls}"><label>State<span class="req">*</span></label><select data-meta="${key}"><option value="">Select…</option>${AU_STATES.map(x => `<option>${x}</option>`).join("")}</select></div>`;
+const addressFields = p => `<div class="grid4">
+    ${field(p+"Street", "Street address", { cls:"span-all", attrs:'autocomplete="street-address"' })}
+    ${field(p+"Suburb", "Suburb", { attrs:'autocomplete="address-level2"' })}
+    ${stateSelect(p+"State")}
+    ${field(p+"Postcode", "Postcode", { attrs:'inputmode="numeric" maxlength="4" autocomplete="postal-code"' })}
+  </div>`;
+function storeRowHTML(st, i) {
+  return `<div class="store-row" data-store-row="${st.id}">
+      <span class="no">${i+1}</span>
+      <div class="field"><label>Store name – line 1<span class="req">*</span></label><input type="text" data-store="${st.id}" data-key="line1" value="${esc(st.line1)}" placeholder="e.g. PENRITH"></div>
+      <div class="field l2"><label>Line 2 (optional)</label><input type="text" data-store="${st.id}" data-key="line2" value="${esc(st.line2)}" placeholder="e.g. WESTFIELD"></div>
+      <div class="field"><label>Qty<span class="req">*</span></label><input type="number" min="1" max="${MAX_QTY}" step="1" data-store="${st.id}" data-key="qty" value="${esc(st.qty)}"></div>
+      ${state.stores.length > 1 ? `<button class="ico del" data-act="del-store" data-store="${st.id}" title="Remove this store">✕</button>` : "<span></span>"}
+    </div>`;
+}
 function storeStepHTML(i, n) {
-  const m = DEFAULT.meta;
+  const m = DEFAULT.meta, p = PRICING;
   return `<section class="card step-intro"><div class="body">
-      <div class="eyebrow">Step ${i+1} of ${n} · Store details</div>
-      <h1>Tell us about your store</h1>
-      <p>This builder is pre-filled with the current Mister Minit mat template. We'll walk you through the mat one part at a time – ${n} short steps – so you can check every price and change anything that's different in your store. At the end you'll see your mat laid out next to an example of the finished product, then send it to ${DESIGN_TEAM} with one click.</p>
+      <div class="eyebrow">Step ${i+1} of ${n} · Store &amp; business details</div>
+      <h1>Tell us about your store${state.stores.length > 1 ? "s" : ""} and business</h1>
+      <p>This builder is pre-filled with the current Mister Minit mat template. First we need your store${state.stores.length > 1 ? "s" : ""} and business details for your quote, then we'll walk you through the mat one part at a time so you can check every price. At the end you'll see your mat laid out, then submit it – we'll send you a quote straight away.</p>
       <p><b>Your work saves automatically in this browser</b>, so you can stop and come back any time.</p>
     </div></section>
     <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Store name <span class="hint">shown top-right of the mat</span></h2>
+      <h2 class="group" style="margin-top:0">Your stores <span class="hint">each store name is shown top-right of its mat</span></h2>
+      <div id="store-rows">${state.stores.map(storeRowHTML).join("")}</div>
+      ${state.stores.length < MAX_STORES ? `<button class="btn small navy add-store" data-act="add-store">+ Add another store</button>` : ""}
+      <div class="mat-size">📐 Mat size: <b>${MAT_SIZE}</b><span class="muted">– the standard Mister Minit mat. Every store gets the same design with its own name.</span></div>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Own more than one store? Add them all here. Your first mat is ${money(p.first)} and includes up to ${p.designMinutes} minutes of design time; every mat after that is ${money(p.extra)}.</p>
+    </div></section>
+    <section class="card"><div class="body">
+      <h2 class="group" style="margin-top:0">Business details <span class="hint">for your quote and invoice</span></h2>
       <div class="grid2">
-        <div class="field"><label>Store name – line 1<span class="req">*</span></label><input type="text" data-meta="store1" placeholder="e.g. BLACKTOWN"></div>
-        <div class="field"><label>Store name – line 2 (optional)</label><input type="text" data-meta="store2" placeholder="e.g. STANHOPE VILLAGE"><div class="hint">Use this if your store name runs over two lines</div></div>
+        ${field("legalName", "Legal entity name", { hint:"As registered with your ABN, e.g. Smith Holdings Pty Ltd", attrs:'autocomplete="organization"' })}
+        ${field("tradingName", "Trading name", { hint:"The name your customers know you by" })}
+        ${field("abn", "ABN", { attrs:'inputmode="numeric" placeholder="12 345 678 901"', hint:'<a href="https://abr.business.gov.au" target="_blank" rel="noopener">Look up your ABN</a>' })}
       </div>
-      <h2 class="group">Who should the designer contact?</h2>
+      <h2 class="group">Contact person <span class="hint">who we send the quote and mockup to</span></h2>
       <div class="grid2">
-        <div class="field"><label>Contact name<span class="req">*</span></label><input type="text" data-meta="contactName"></div>
-        <div class="field"><label>Contact email<span class="req">*</span></label><input type="text" data-meta="contactEmail" inputmode="email" autocomplete="email"><div class="hint">A copy of your brief will be emailed here</div></div>
-        <div class="field"><label>Contact phone (optional)</label><input type="text" data-meta="contactPhone" inputmode="tel" autocomplete="tel"></div>
-        <div class="field"><label>Mat size / quantity</label><input type="text" data-meta="matSize" placeholder="e.g. 800 x 400 mm, 2 mats"><div class="hint">The design is made for 800 x 400 mm – only change this if you need a different size or more than one mat</div></div>
+        ${field("firstName", "First name", { attrs:'autocomplete="given-name"' })}
+        ${field("lastName", "Last name", { attrs:'autocomplete="family-name"' })}
+        ${field("contactEmail", "Contact email", { attrs:'inputmode="email" autocomplete="email"', hint:"Your quote and a copy of your brief are emailed here" })}
+        ${field("contactPhone", "Contact number", { attrs:'inputmode="tel" autocomplete="tel"' })}
       </div>
-      <h2 class="group">Mat header <span class="hint">fixed – the same on every store's mat</span></h2>
+      <h2 class="group">Billing address</h2>
+      ${addressFields("bill")}
+      <label class="check-line"><input type="checkbox" data-meta="deliverySame"> Deliver the mats to this address</label>
+      ${state.meta.deliverySame ? "" : `<h2 class="group">Delivery address <span class="hint">where the mats should be sent</span></h2>${addressFields("del")}`}
+    </div></section>
+    <section class="card"><div class="body">
+      <h2 class="group" style="margin-top:0">Your order <span class="hint">updates as you change quantities</span></h2>
+      <div id="order-summary">${orderSummaryHTML()}</div>
+    </div></section>
+    <section class="card"><div class="body">
+      <h2 class="group" style="margin-top:0">Mat header <span class="hint">fixed – the same on every store's mat</span></h2>
       <div class="fixed-header">
         <span class="lock">🔒 Not editable</span>
         <b>${esc(m.headline1)}<span>${esc(m.headline2)}</span></b>
@@ -722,15 +838,37 @@ function columnStepHTML(s, i, n) {
 
 /* ---- Last step: review & send */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-function storeValid() {
-  const m = state.meta;
-  return !!(norm(m.store1) && norm(m.contactName) && EMAIL_RE.test(norm(m.contactEmail)));
+/* [selector of the input, message] for everything missing on step 1 */
+function storeErrors() {
+  const m = state.meta, errs = [], need = (k, msg) => { if (!norm(m[k])) errs.push([`[data-meta="${k}"]`, msg]); };
+  state.stores.forEach(st => {
+    if (!norm(st.line1)) errs.push([`[data-store="${st.id}"][data-key="line1"]`, "Please enter the store name"]);
+    const q = +st.qty;
+    if (!(Number.isInteger(q) && q >= 1 && q <= MAX_QTY)) errs.push([`[data-store="${st.id}"][data-key="qty"]`, `1 to ${MAX_QTY}`]);
+  });
+  need("legalName", "Please enter your legal entity name");
+  need("tradingName", "Please enter your trading name");
+  if (!norm(m.abn)) errs.push(['[data-meta="abn"]', "Please enter your ABN"]);
+  else if (!isValidAbn(m.abn)) errs.push(['[data-meta="abn"]', "That ABN doesn't look right – it should be 11 digits"]);
+  need("firstName", "Please enter a first name");
+  need("lastName", "Please enter a last name");
+  if (!norm(m.contactEmail)) errs.push(['[data-meta="contactEmail"]', "Please enter your email address – your quote goes here"]);
+  else if (!EMAIL_RE.test(norm(m.contactEmail))) errs.push(['[data-meta="contactEmail"]', "That doesn't look like an email address"]);
+  need("contactPhone", "Please enter a contact number");
+  for (const p of m.deliverySame ? ["bill"] : ["bill","del"]) {
+    need(p+"Street", "Please enter the street address");
+    need(p+"Suburb", "Please enter the suburb");
+    need(p+"State", "Please choose a state");
+    if (!/^\d{4}$/.test(norm(m[p+"Postcode"]))) errs.push([`[data-meta="${p}Postcode"]`, "4-digit postcode"]);
+  }
+  return errs;
 }
+const storeValid = () => storeErrors().length === 0;
 function reviewChecks() {
   const m = state.meta, checks = [];
   checks.push(storeValid()
-    ? { ok:true, text:`Store details: <b>${esc(storeName())}</b> · contact ${esc(m.contactName)}`, step:0 }
-    : { ok:false, text:`Store name or contact details are missing`, step:0 });
+    ? { ok:true, text:`Store details: <b>${esc(storeName())}</b> · ${totalMats()} mat${totalMats()===1?"":"s"} · ${esc(m.tradingName)} · contact ${esc(m.firstName)} ${esc(m.lastName)}`, step:0 }
+    : { ok:false, text:`Some store, business or contact details are missing`, step:0 });
   STEPS.forEach((s, idx) => {
     if (!s.col) return;
     const cnt = state.sections.filter(x => x.column === s.col).length;
@@ -768,6 +906,12 @@ function reviewStepHTML(i, n) {
       <div class="checks">${checks.map(c => `<div class="check ${c.ok?"ok":"warn"}"><i>${c.ok?"✓":"!"}</i><span>${c.text}</span>${c.ok?"":`<button class="btn small" data-goto="${c.step}">Fix</button>`}</div>`).join("")}</div>
     </div></section>
     <section class="card"><div class="body">
+      <h2 class="group" style="margin-top:0">Your order <span class="hint">${esc(storeName() || "no stores yet")}</span></h2>
+      ${orderSummaryHTML()}
+      <p class="muted" style="font-size:12px;margin:8px 0 0">Delivered to ${esc(deliveryText() || "your nominated address")}.</p>
+      <div class="actions"><button type="button" class="btn small" data-goto="0">Change stores or details</button></div>
+    </div></section>
+    <section class="card"><div class="body">
       <h2 class="group" style="margin-top:0">Notes for the designer <span class="hint">optional</span></h2>
       <div class="field"><textarea data-meta="notes" rows="4" placeholder="Anything else? e.g. 'We don't do Birkenstock', 'Please swap the shoe drawing for a key', 'Our logo lockup is different'…"></textarea>
       <div class="hint">Anything the form can't capture – services you don't offer, artwork changes, special requests.</div></div>
@@ -779,14 +923,49 @@ function reviewStepHTML(i, n) {
     <section class="card send-card" id="send-card"><div class="body">
       <h2 class="group" style="margin-top:0">Send your brief</h2>
       <div class="send-to"><svg role="img" aria-label="Ankor'd" viewBox="0 0 817.03 194.35"><use href="#ankord-logo"/></svg><span>Your brief goes straight to <b>Ankor'd</b>, the team that designs and produces the Mister Minit mats.</span></div>
-      ${ui.submittedAt ? `<div class="sent-banner">✓ Brief sent ${esc(new Date(ui.submittedAt).toLocaleString())}. A copy was emailed to <b>${esc(state.meta.contactEmail)}</b>. Made more changes? You can submit again.</div>` : ""}
-      <p style="margin:0 0 6px">Submitting emails your layout and every price above to ${DESIGN_TEAM}, with a copy to <b>${esc(state.meta.contactEmail || "your email address")}</b>. We'll design the mat from it and be in touch if anything needs clarifying.</p>
+      ${ui.submittedAt ? submittedHTML() : ""}
+      <p style="margin:0 0 6px">Submitting sends your layout and every price above to ${DESIGN_TEAM} and creates your <b>quote</b>. Your quote and a copy of your brief are emailed to <b>${esc(state.meta.contactEmail || "your email address")}</b>.</p>
+      <ol class="next">
+        <li>Approve and pay your quote.</li>
+        <li>Once it's paid, we apply your changes and send you a mockup.</li>
+        <li>When you're happy with the mockup, we order your mat${totalMats() > 1 ? "s" : ""} and deliver ${totalMats() > 1 ? "them" : "it"} to your nominated address.</li>
+      </ol>
       ${issues ? `<p class="warn-note">⚠ There ${issues===1?"is 1 item":"are "+issues+" items"} flagged in the checklist above. You can still submit, but it's worth a quick look first.</p>` : ""}
       <div class="actions">
         <button class="btn primary" data-act="submit" id="btn-submit">${ui.submittedAt ? "Submit again" : "Submit brief"}</button>
         <span class="send-status" id="send-status" aria-live="polite"></span>
       </div>
     </div></section>`;
+}
+
+const deliveryText = () => {
+  const m = state.meta, p = m.deliverySame ? "bill" : "del";
+  return [norm(m[p+"Street"]), [m[p+"Suburb"], m[p+"State"], m[p+"Postcode"]].map(norm).filter(Boolean).join(" ")].filter(Boolean).join(", ");
+};
+/* Shown on the send card once submitted: the quote number, total, and the PDF / pay link */
+let lastQuotePdf = null;     // base64 PDF from the last submit – kept in memory only
+function submittedHTML() {
+  const q = ui.quote, doc = q?.kind === "invoice" ? "invoice" : "quote";
+  const when = esc(new Date(ui.submittedAt).toLocaleString());
+  if (!q?.number) return `<div class="sent-banner">✓ Brief sent ${when}. A copy was emailed to <b>${esc(state.meta.contactEmail)}</b>. We'll email your quote shortly. Made more changes? You can submit again.</div>`;
+  return `<div class="quote-box">
+      <h3>✓ Brief sent – your ${doc} is ${esc(q.number)}</h3>
+      <div>Total <b>${money(q.total)}</b> AUD including GST. Sent ${when} to <b>${esc(state.meta.contactEmail)}</b>.</div>
+      <div class="actions">
+        ${q.payUrl ? `<a class="btn primary" href="${esc(q.payUrl)}" target="_blank" rel="noopener">Pay invoice ${esc(q.number)} →</a>` : ""}
+        ${lastQuotePdf ? `<button class="btn navy" data-act="download-quote">Download ${doc} (PDF)</button>` : ""}
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:8px">${q.payUrl ? "Once it's paid we'll apply your changes and send you a mockup." : "Reply to the email with your quote to approve it and we'll send your invoice for payment."} Made more changes? You can submit again.</div>
+    </div>`;
+}
+function downloadQuote() {
+  if (!lastQuotePdf) return;
+  const bytes = Uint8Array.from(atob(lastQuotePdf), c => c.charCodeAt(0));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([bytes], { type:"application/pdf" }));
+  a.download = `${ui.quote?.kind === "invoice" ? "Invoice" : "Quote"} ${ui.quote?.number || ""}.pdf`.trim();
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
 function renderStepper() {
@@ -808,7 +987,7 @@ function renderNav() {
 function renderStep() {
   const s = cur(), i = ui.step, n = STEPS.length;
   stepView.innerHTML = s.id === "store" ? storeStepHTML(i, n) : s.id === "review" ? reviewStepHTML(i, n) : columnStepHTML(s, i, n);
-  document.querySelectorAll("[data-meta]").forEach(el => { el.value = state.meta[el.dataset.meta] ?? ""; markMeta(el); });
+  document.querySelectorAll("[data-meta]").forEach(el => { const v = state.meta[el.dataset.meta]; if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? ""; });
   renderStepper(); renderNav(); renderPreview();
   if (s.id === "review") { $("#mat-render").innerHTML = matHTML(null); fitRender(); }
   // bring the part of the mat being edited into view in the preview
@@ -825,27 +1004,19 @@ function fitRender() {
   r.style.transform = `scale(${sc})`; box.style.height = Math.ceil(H * sc) + "px";
 }
 window.addEventListener("resize", fitRender);
-function markMeta(el) {
-  const k = el.dataset.meta, fld = el.closest(".field");
-  if (!fld) return;
-  fld.classList.toggle("changed", ["store1","store2"].includes(k) && norm(state.meta[k]) !== norm(DEFAULT.meta[k]));
-}
+
 function clearInvalid(fld) { if (!fld) return; fld.classList.remove("invalid"); fld.querySelector(".err")?.remove(); }
-/* Step 1 must have a store name and a way to contact the store before moving on */
+/* Step 1 must have the stores, business and contact details before moving on */
 function validateStore() {
-  const m = state.meta, errs = [];
-  if (!norm(m.store1)) errs.push(["store1", "Please enter your store name"]);
-  if (!norm(m.contactName)) errs.push(["contactName", "Please enter a contact name"]);
-  if (!norm(m.contactEmail)) errs.push(["contactEmail", "Please enter your email address – your copy of the brief goes here"]);
-  else if (!EMAIL_RE.test(norm(m.contactEmail))) errs.push(["contactEmail", "That doesn't look like an email address"]);
+  const errs = storeErrors();
   document.querySelectorAll(".field.invalid").forEach(clearInvalid);
-  for (const [k, msg] of errs) {
-    const fld = document.querySelector(`[data-meta="${k}"]`)?.closest(".field");
+  for (const [sel, msg] of errs) {
+    const fld = document.querySelector(sel)?.closest(".field");
     if (fld) { fld.classList.add("invalid"); fld.insertAdjacentHTML("beforeend", `<div class="err">${msg}</div>`); }
   }
   if (errs.length) {
     document.querySelector(".field.invalid")?.scrollIntoView({ behavior:"smooth", block:"center" });
-    document.querySelector(".field.invalid input")?.focus({ preventScroll:true });
+    document.querySelector(".field.invalid input, .field.invalid select")?.focus({ preventScroll:true });
     toast("A few details are needed before you continue");
     return false;
   }
@@ -864,7 +1035,13 @@ form.addEventListener("input", e => {
   const t = e.target;
   if (t.dataset.meta) {
     if (FIXED_META.includes(t.dataset.meta)) return;
-    state.meta[t.dataset.meta] = t.value; markMeta(t); clearInvalid(t.closest(".field"));
+    state.meta[t.dataset.meta] = t.type === "checkbox" ? t.checked : t.value; clearInvalid(t.closest(".field"));
+    if (t.type === "checkbox") { save(); renderStep(); return; }   // shows / hides the delivery address
+  }
+  else if (t.dataset.store) {
+    const st = findStore(t.dataset.store); if (!st) return;
+    st[t.dataset.key] = t.dataset.key === "qty" ? (t.value === "" ? "" : Math.floor(+t.value)) : t.value;
+    clearInvalid(t.closest(".field")); refreshOrder();
   }
   else if (t.dataset.sec) {
     const sec = findSec(t.dataset.sec); if (!sec) return;
@@ -894,6 +1071,18 @@ function onClick(e) {
   const act = b.dataset.act;
   if (act === "add-sec") return addSection(b.dataset.col);
   if (act === "submit") return submitBrief();
+  if (act === "download-quote") return downloadQuote();
+  if (act === "add-store") {
+    const st = { id:uid(), line1:"", line2:"", qty:1 };
+    state.stores.push(st); save(); renderStep(); updateCount();
+    document.querySelector(`[data-store="${st.id}"][data-key="line1"]`)?.focus();
+    return;
+  }
+  if (act === "del-store") {
+    const st = findStore(b.dataset.store);
+    if (st && state.stores.length > 1 && confirm(`Remove ${storeLabel(st) || "this store"}?`)) { state.stores.splice(state.stores.indexOf(st), 1); save(); renderStep(); updateCount(); }
+    return;
+  }
   const sec = findSec(b.dataset.sec); if (!sec) return;
   const idx = state.sections.indexOf(sec);
   const items = sec.items, ii = items.findIndex(i => i.id === b.dataset.item);
@@ -972,7 +1161,9 @@ function buildPayload(image) {
     };
   });
   return {
-    meta: state.meta, sections, changes: diff(),
+    meta: { ...state.meta, contactName: `${norm(state.meta.firstName)} ${norm(state.meta.lastName)}`.trim() },
+    stores: state.stores.map(st => ({ line1: norm(st.line1), line2: norm(st.line2), qty: Math.floor(+st.qty) || 0 })),
+    sections, changes: diff(),
     lookup: { columns: COLUMNS.map(([key, name, theme]) => ({ key, name, theme })), colors: Object.fromEntries(Object.entries(PALETTE).map(([k, p]) => [k, p.name])), kinds: KIND_NAME },
     template: "Mister Minit Mat-CMYK-Outlined.pdf",
     submittedAt: new Date().toISOString(),
@@ -996,15 +1187,19 @@ async function submitBrief() {
     const image = await renderMatImage();
     st.textContent = "Running a quick security check…";
     const recaptchaToken = await getRecaptchaToken();
-    st.textContent = "Sending…";
+    st.textContent = "Sending your brief and preparing your quote…";
     const payload = { ...buildPayload(image), recaptchaToken };
     const r = await fetch(SUBMIT_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok || !data.ok) throw new Error(data.error || `the server replied ${r.status}`);
-    ui.submittedAt = payload.submittedAt; saveUi();
+    const q = data.quote || {};
+    lastQuotePdf = q.pdf || null;
+    ui.submittedAt = payload.submittedAt;
+    ui.quote = { kind: q.kind, number: q.number, total: q.total, includesGst: q.includesGst, payUrl: q.payUrl };
+    saveUi();
     sending = false; renderStep(); updateCount();
     $("#send-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    toast(`Brief sent – a copy is on its way to ${state.meta.contactEmail}`);
+    toast(q.number ? `Brief sent – ${q.kind || "quote"} ${q.number} is on its way to ${state.meta.contactEmail}` : `Brief sent – a copy is on its way to ${state.meta.contactEmail}`);
   } catch (err) {
     sending = false; btn.disabled = false;
     st.className = "send-status error"; st.textContent = `Couldn't send: ${err.message}. Please try again, or contact us if it keeps happening.`;
@@ -1021,7 +1216,6 @@ const fmtItem = (kind, it) => {
 const showVal = v => typeof v === "boolean" ? (v ? "on" : "off") : `"${String(v ?? "").replace(/\n/g," / ")}"`;
 function diff() {
   const out = [];
-  for (const [k, name] of [["store1","line 1"],["store2","line 2"]]) if (norm(state.meta[k]) !== norm(DEFAULT.meta[k])) out.push(`Store name · ${name}: was ${showVal(DEFAULT.meta[k])}, now ${showVal(state.meta[k])}`);
   const cur = new Map(state.sections.map(s => [s.id, s]));
   for (const ds of DEFAULT.sections) if (!cur.has(ds.id)) out.push(`REMOVED SECTION: ${ds.title}`);
   for (const s of state.sections) {
@@ -1046,11 +1240,11 @@ function updateCount() {
 /* ===================== PREVIEW ===================== */
 /* activeCol: highlight that part of the mat (used on screen while editing; not for print) */
 function matHTML(activeCol) {
-  const m = state.meta;
+  const m = state.meta, st = state.stores[0] || {};
   let html = `<div class="pv-mat ${activeCol ? "focus" : ""}"><div class="pv-header">
     <div class="logo">Mister Minit<i>'Real people fixing problems'</i></div>
     <div class="fixed"><b>${esc(m.headline1)}<span>${esc(m.headline2)}</span></b><small>${esc(m.tagline)}</small><small class="gst">${esc(m.gst)}</small></div>
-    <div class="store">${esc(m.store1)}<br>${esc(m.store2)}</div></div><div class="pv-grid">`;
+    <div class="store">${esc(norm(st.line1) || "YOUR STORE")}<br>${esc(st.line2)}</div></div><div class="pv-grid">`;
   for (const [col, name] of COLUMNS) {
     const secs = state.sections.filter(s => s.column === col); if (!secs.length) continue;
     html += `<div class="pv-col ${col==="bottom"?"pv-band":""} ${activeCol===col?"active":""}"><div class="pv-col-label">${name}</div>${secs.map(pvSection).join("")}</div>`;
@@ -1077,9 +1271,9 @@ function pvSection(s) {
 /* Build the print pages and scale the mat to fit one A4 landscape sheet */
 const PAGE = { w: 1062, h: 733, head: 30 };   // A4 landscape minus 8 mm margins, in CSS px
 function preparePrint() {
-  const m = state.meta, d = diff(), store = [m.store1, m.store2].filter(Boolean).join(" / ");
+  const m = state.meta, d = diff(), store = storeName();
   $("#print-mat").innerHTML = matHTML(null);
-  $("#print-head").innerHTML = `<b>Mister Minit price mat brief — ${esc(store)}</b><span>Contact: ${esc(m.contactName||"-")} ${esc(m.contactEmail||"")} ${esc(m.contactPhone||"")}${m.matSize?` · Mat: ${esc(m.matSize)}`:""} · ${d.length} change${d.length===1?"":"s"} from template${d.length||m.notes.trim()?" (see page 2)":""} · ${new Date().toLocaleDateString()}</span>`;
+  $("#print-head").innerHTML = `<b>Mister Minit price mat brief — ${esc(store)}</b><span>Contact: ${esc(`${m.firstName} ${m.lastName}`.trim()||"-")} ${esc(m.contactEmail||"")} ${esc(m.contactPhone||"")} · ${totalMats()} × ${MAT_SIZE} · ${d.length} change${d.length===1?"":"s"} from template${d.length||m.notes.trim()?" (see page 2)":""} · ${new Date().toLocaleDateString()}</span>`;
   const fit = $("#print-fit"), box = $("#print-fit-box");
   fit.style.transform = "none"; box.style.width = box.style.height = "auto";
   const W = fit.offsetWidth, H = fit.offsetHeight;

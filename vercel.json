@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/submit.js": {
-      "maxDuration": 30
+      "maxDuration": 60
     }
   },
   "redirects": [
@@ -23,17 +23,31 @@
     {
       "source": "/misterminit/api/submit",
       "destination": "/api/submit"
+    },
+    {
+      "source": "/misterminit/api/pricing",
+      "destination": "/api/pricing"
+    },
+    {
+      "source": "/misterminit/api/xero/:action",
+      "destination": "/api/xero?action=:action"
     }
   ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/(submit|xero)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "no-store"
         }
       ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/xero?action=refresh",
+      "schedule": "0 18 * * *"
     }
   ]
 }
