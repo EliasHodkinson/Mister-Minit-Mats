@@ -1,9 +1,9 @@
 /*
- * POST /api/submit — receives the brief from the Mat Builder, raises a Xero quote for the mats and emails it:
- *   1. to the Ankor'd design team (MAIL_TO) with the render inline + attached, a .csv of every line and the quote PDF
- *   2. a copy to the store contact (meta.contactEmail) with their quote attached
+ * POST /api/submit — receives the brief from the Mat Builder, raises a Xero invoice (or quote) for the mats and emails it:
+ *   1. to the Ankor'd design team (MAIL_TO) with the render inline + attached, a .csv of every line and the invoice PDF
+ *   2. a copy to the store contact (meta.contactEmail) with their invoice attached and a "pay now" link
  * Both are sent from MAIL_FROM through Microsoft Graph (see lib/graph.js). The Xero step (lib/xero.js) is
- * optional – when it isn't configured or fails, the brief still goes out and the team is told to quote by hand.
+ * optional – when it isn't configured or fails, the brief still goes out and the team is told to raise it by hand.
  *
  * Abuse protection: per-IP / per-email / global rate limits (lib/ratelimit.js) and a
  * reCAPTCHA v3 check (lib/recaptcha.js) before anything is emailed.
@@ -16,7 +16,7 @@ import { sendMail } from "../lib/graph.js";
 import { verifyRecaptcha } from "../lib/recaptcha.js";
 import { createLimiter, rateLimitError } from "../lib/ratelimit.js";
 import { ANKORD_LOGO_PNG } from "../lib/brand.js";
-import { orderProblems, quoteLines, readCustomer, readPricing, readStores, storeLabel } from "../lib/order.js";
+import { docKind, orderProblems, quoteLines, readCustomer, readPricing, readStores, storeLabel } from "../lib/order.js";
 import { raiseXeroDocument, xeroConfigured } from "../lib/xero.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -102,14 +102,14 @@ export async function processSubmission(body, env, { ip = "unknown", limiter = c
   const customer = readCustomer(body.meta);
   const order = { stores, customer, quote: quoteLines(stores, env.PRICING) };
 
-  // Raise the quote before emailing so both emails can carry it. A Xero problem never loses the brief.
+  // Raise the invoice / quote before emailing so both emails can carry it. A Xero problem never loses the brief.
   let doc = null, xeroError = null;
   if (xeroConfigured(env)) {
     try { doc = await raise(env, { ...order, reference: `Mat brief – ${stores.map(storeLabel).join(", ")}` }); }
     catch (e) { xeroError = e.message; console.error("xero failed:", e); }
   } else xeroError = "Xero isn't connected yet (XERO_CLIENT_ID / XERO_CLIENT_SECRET not set)";
 
-  const brief = buildBrief(body, { order, doc, xeroError });
+  const brief = buildBrief(body, { order, doc, xeroError, docKind: docKind(env) });
   const render = imageAttachment(body.image);
   const quotePdf = pdfAttachment(doc);
 
@@ -138,10 +138,10 @@ export async function processSubmission(body, env, { ip = "unknown", limiter = c
 
 /* What the page shows after submitting: the numbers, the PDF to download and (for invoices) the pay link.
    Whether the customer was already in Xero is deliberately left out. */
-export function publicQuote({ order, doc }) {
+export function publicQuote({ order, doc }, env) {
   const q = order.quote;
   return {
-    kind: doc?.kind || "quote",
+    kind: doc?.kind || env.PRICING.document,
     number: doc?.number || null,
     lines: q.lines.map(({ description, qty, unit, amount }) => ({ description, qty, unit, amount })),
     subTotal: doc?.subTotal ?? q.subTotal, gst: doc?.tax ?? q.gst, total: doc?.total ?? q.total, includesGst: q.includesGst,
@@ -175,7 +175,7 @@ export default async function handler(req, res) {
   try {
     const result = await processSubmission(body, env, { ip: clientIp(req) });
     if (result.warning) console.warn(result.warning);
-    return res.status(200).json({ ok: true, customerCopy: result.customerCopy, quote: publicQuote(result) });
+    return res.status(200).json({ ok: true, customerCopy: result.customerCopy, quote: publicQuote(result, env) });
   } catch (e) {
     const status = e.status || 502;
     if (e.retryAfter) res.setHeader("Retry-After", String(e.retryAfter));

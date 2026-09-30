@@ -605,14 +605,15 @@ const findStore = id => state.stores.find(st => st.id === id);
 const MAT_SIZE = "800 x 400 mm";
 const MAX_STORES = 20, MAX_QTY = 20;
 const AU_STATES = ["ACT","NSW","NT","QLD","SA","TAS","VIC","WA"];
-let PRICING = { first:250, extra:150, freight:25, includesGst:true, gstRate:0.1, designMinutes:45 };
+let PRICING = { first:250, extra:150, freight:25, includesGst:true, gstRate:0.1, designMinutes:45, document:"invoice" };
+const DOC = () => PRICING.document === "quote" ? "quote" : "invoice";     // what Xero raises on submit
 const money = n => "$" + Number(n || 0).toLocaleString("en-AU", { minimumFractionDigits:2, maximumFractionDigits:2 });
 const totalMats = () => state.stores.reduce((n, st) => n + (Math.floor(+st.qty) || 0), 0);
 function orderLines() {
   const mats = totalMats(), p = PRICING, lines = [];
-  if (mats >= 1) lines.push({ label:`Mister Minit price mat – ${MAT_SIZE}`, desc:`First mat · includes up to ${p.designMinutes} minutes of design time for your changes`, qty:1, unit:p.first });
-  if (mats >= 2) lines.push({ label:`Additional mat${mats > 2 ? "s" : ""} – ${MAT_SIZE}`, desc:"Same design with each store's name", qty:mats-1, unit:p.extra });
-  if (mats >= 1 && p.freight > 0) lines.push({ label:"Freight", desc:"", qty:1, unit:p.freight });
+  if (mats >= 1) lines.push({ label:`Price mat – ${MAT_SIZE}, your customisations applied`, desc:`Non-slip, colour stitched, 4 mm · includes ${p.designMinutes} minutes of design changes`, qty:1, unit:p.first });
+  if (mats >= 2) lines.push({ label:`Reprint${mats > 2 ? "s" : ""} – ${MAT_SIZE}`, desc:"Same design with each store's name", qty:mats-1, unit:p.extra });
+  if (mats >= 1 && p.freight > 0) lines.push({ label:"Standard freight", desc:"", qty:1, unit:p.freight });
   lines.forEach(l => l.amount = Math.round(l.qty * l.unit * 100) / 100);
   const sum = lines.reduce((n, l) => n + l.amount, 0);
   const gst = p.includesGst ? sum / (1 + 1 / p.gstRate) : sum * p.gstRate;
@@ -627,7 +628,7 @@ function orderSummaryHTML(q = orderLines()) {
 }
 const refreshOrder = () => { const el = $("#order-summary"); if (el) el.innerHTML = orderSummaryHTML(); };
 fetch(SUBMIT_URL.replace(/submit$/, "pricing")).then(r => r.ok ? r.json() : null).then(d => {
-  if (d?.pricing) { PRICING = { ...PRICING, ...d.pricing }; refreshOrder(); }
+  if (d?.pricing) { const before = DOC(); PRICING = { ...PRICING, ...d.pricing }; if (DOC() !== before) renderStep(); else refreshOrder(); }
 }).catch(() => {});
 
 /* ABN: 11 digits with the ATO checksum */
@@ -759,7 +760,7 @@ function storeStepHTML(i, n) {
   return `<section class="card step-intro"><div class="body">
       <div class="eyebrow">Step ${i+1} of ${n} · Store &amp; business details</div>
       <h1>Tell us about your store${state.stores.length > 1 ? "s" : ""} and business</h1>
-      <p>This builder is pre-filled with the current Mister Minit mat template. First we need your store${state.stores.length > 1 ? "s" : ""} and business details for your quote, then we'll walk you through the mat one part at a time so you can check every price. At the end you'll see your mat laid out, then submit it – we'll send you a quote straight away.</p>
+      <p>This builder is pre-filled with the current Mister Minit mat template. First we need your store${state.stores.length > 1 ? "s" : ""} and business details for your ${DOC()}, then we'll walk you through the mat one part at a time so you can check every price. At the end you'll see your mat laid out, then submit it – we'll email your ${DOC()} straight away.</p>
       <p><b>Your work saves automatically in this browser</b>, so you can stop and come back any time.</p>
     </div></section>
     <section class="card"><div class="body">
@@ -770,17 +771,17 @@ function storeStepHTML(i, n) {
       <p class="muted" style="font-size:12px;margin:8px 0 0">Own more than one store? Add them all here. Your first mat is ${money(p.first)} and includes up to ${p.designMinutes} minutes of design time; every mat after that is ${money(p.extra)}.</p>
     </div></section>
     <section class="card"><div class="body">
-      <h2 class="group" style="margin-top:0">Business details <span class="hint">for your quote and invoice</span></h2>
+      <h2 class="group" style="margin-top:0">Business details <span class="hint">for your invoice</span></h2>
       <div class="grid2">
         ${field("legalName", "Legal entity name", { hint:"As registered with your ABN, e.g. Smith Holdings Pty Ltd", attrs:'autocomplete="organization"' })}
         ${field("tradingName", "Trading name", { hint:"The name your customers know you by" })}
         ${field("abn", "ABN", { attrs:'inputmode="numeric" placeholder="12 345 678 901"', hint:'<a href="https://abr.business.gov.au" target="_blank" rel="noopener">Look up your ABN</a>' })}
       </div>
-      <h2 class="group">Contact person <span class="hint">who we send the quote and mockup to</span></h2>
+      <h2 class="group">Contact person <span class="hint">who we send the ${DOC()} and mockup to</span></h2>
       <div class="grid2">
         ${field("firstName", "First name", { attrs:'autocomplete="given-name"' })}
         ${field("lastName", "Last name", { attrs:'autocomplete="family-name"' })}
-        ${field("contactEmail", "Contact email", { attrs:'inputmode="email" autocomplete="email"', hint:"Your quote and a copy of your brief are emailed here" })}
+        ${field("contactEmail", "Contact email", { attrs:'inputmode="email" autocomplete="email"', hint:`Your ${DOC()} and a copy of your brief are emailed here` })}
         ${field("contactPhone", "Contact number", { attrs:'inputmode="tel" autocomplete="tel"' })}
       </div>
       <h2 class="group">Billing address</h2>
@@ -852,7 +853,7 @@ function storeErrors() {
   else if (!isValidAbn(m.abn)) errs.push(['[data-meta="abn"]', "That ABN doesn't look right – it should be 11 digits"]);
   need("firstName", "Please enter a first name");
   need("lastName", "Please enter a last name");
-  if (!norm(m.contactEmail)) errs.push(['[data-meta="contactEmail"]', "Please enter your email address – your quote goes here"]);
+  if (!norm(m.contactEmail)) errs.push(['[data-meta="contactEmail"]', `Please enter your email address – your ${DOC()} goes here`]);
   else if (!EMAIL_RE.test(norm(m.contactEmail))) errs.push(['[data-meta="contactEmail"]', "That doesn't look like an email address"]);
   need("contactPhone", "Please enter a contact number");
   for (const p of m.deliverySame ? ["bill"] : ["bill","del"]) {
@@ -924,9 +925,9 @@ function reviewStepHTML(i, n) {
       <h2 class="group" style="margin-top:0">Send your brief</h2>
       <div class="send-to"><svg role="img" aria-label="Ankor'd" viewBox="0 0 817.03 194.35"><use href="#ankord-logo"/></svg><span>Your brief goes straight to <b>Ankor'd</b>, the team that designs and produces the Mister Minit mats.</span></div>
       ${ui.submittedAt ? submittedHTML() : ""}
-      <p style="margin:0 0 6px">Submitting sends your layout and every price above to ${DESIGN_TEAM} and creates your <b>quote</b>. Your quote and a copy of your brief are emailed to <b>${esc(state.meta.contactEmail || "your email address")}</b>.</p>
+      <p style="margin:0 0 6px">Submitting sends your layout and every price above to ${DESIGN_TEAM} and creates your <b>${DOC()}</b>. Your ${DOC()} and a copy of your brief are emailed to <b>${esc(state.meta.contactEmail || "your email address")}</b>.</p>
       <ol class="next">
-        <li>Approve and pay your quote.</li>
+        <li>${DOC() === "invoice" ? "Pay your invoice online – you'll get a Pay now link as soon as you submit." : "Approve and pay your quote."}</li>
         <li>Once it's paid, we apply your changes and send you a mockup.</li>
         <li>When you're happy with the mockup, we order your mat${totalMats() > 1 ? "s" : ""} and deliver ${totalMats() > 1 ? "them" : "it"} to your nominated address.</li>
       </ol>
@@ -945,9 +946,9 @@ const deliveryText = () => {
 /* Shown on the send card once submitted: the quote number, total, and the PDF / pay link */
 let lastQuotePdf = null;     // base64 PDF from the last submit – kept in memory only
 function submittedHTML() {
-  const q = ui.quote, doc = q?.kind === "invoice" ? "invoice" : "quote";
+  const q = ui.quote, doc = q?.kind || DOC();
   const when = esc(new Date(ui.submittedAt).toLocaleString());
-  if (!q?.number) return `<div class="sent-banner">✓ Brief sent ${when}. A copy was emailed to <b>${esc(state.meta.contactEmail)}</b>. We'll email your quote shortly. Made more changes? You can submit again.</div>`;
+  if (!q?.number) return `<div class="sent-banner">✓ Brief sent ${when}. A copy was emailed to <b>${esc(state.meta.contactEmail)}</b>. We'll email your ${DOC()} shortly. Made more changes? You can submit again.</div>`;
   return `<div class="quote-box">
       <h3>✓ Brief sent – your ${doc} is ${esc(q.number)}</h3>
       <div>Total <b>${money(q.total)}</b> AUD including GST. Sent ${when} to <b>${esc(state.meta.contactEmail)}</b>.</div>
@@ -1187,7 +1188,7 @@ async function submitBrief() {
     const image = await renderMatImage();
     st.textContent = "Running a quick security check…";
     const recaptchaToken = await getRecaptchaToken();
-    st.textContent = "Sending your brief and preparing your quote…";
+    st.textContent = `Sending your brief and preparing your ${DOC()}…`;
     const payload = { ...buildPayload(image), recaptchaToken };
     const r = await fetch(SUBMIT_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await r.json().catch(() => ({}));
@@ -1199,7 +1200,7 @@ async function submitBrief() {
     saveUi();
     sending = false; renderStep(); updateCount();
     $("#send-card")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    toast(q.number ? `Brief sent – ${q.kind || "quote"} ${q.number} is on its way to ${state.meta.contactEmail}` : `Brief sent – a copy is on its way to ${state.meta.contactEmail}`);
+    toast(q.number ? `Brief sent – ${q.kind || DOC()} ${q.number} is on its way to ${state.meta.contactEmail}` : `Brief sent – a copy is on its way to ${state.meta.contactEmail}`);
   } catch (err) {
     sending = false; btn.disabled = false;
     st.className = "send-status error"; st.textContent = `Couldn't send: ${err.message}. Please try again, or contact us if it keeps happening.`;

@@ -62,8 +62,8 @@ test("without Xero a submission still sends both emails and flags the missing qu
   assert.equal(sent.length, 2);
   assert.deepEqual(sent[0].to, ["marketing@ankord.com.au"]);
   assert.deepEqual(sent[0].attachments.map(a => a.name), ["ankord-logo.png", "layout.png", "mister-minit-mat-penrith.csv"]);
-  assert.match(sent[0].subject, /NO QUOTE/);
-  assert.ok(sent[0].html.includes("Please quote this one by hand"));
+  assert.match(sent[0].subject, /NO INVOICE/);
+  assert.ok(sent[0].html.includes("Please raise this one by hand"));
   assert.deepEqual(sent[1].to, ["sam@example.com"]);
   assert.deepEqual(sent[1].attachments.map(a => a.name), ["ankord-logo.png", "layout.png"]);
 });

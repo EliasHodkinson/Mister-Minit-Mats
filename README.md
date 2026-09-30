@@ -44,16 +44,17 @@ matches, that contact is used untouched; otherwise a new contact is created with
 billing (postal) and delivery (street) addresses. The store never sees which happened. Only the design
 team's email says "existing contact" or "new contact".
 
-It then raises a **quote** (or, with `XERO_DOCUMENT=invoice`, an approved **invoice**), fetches the PDF
-and attaches it to both emails. The page shows the quote number and total with a **Download quote**
-button, and a **Pay invoice** button in invoice mode.
+It then raises an approved **invoice** (or a **quote** with `XERO_DOCUMENT=quote`) on the "Ankor'd
+Branding" theme, due in `XERO_INVOICE_DUE_DAYS` (7), fetches the PDF and attaches it to both emails. The
+page shows the invoice number and total with **Pay invoice** (Xero's online invoice) and **Download
+invoice** buttons, and the customer email has a **View & pay** button. Card payment on the online
+invoice comes from the payment service set up on that branding theme in Xero (Stripe, etc.).
 
-> Xero quotes can't be paid online, only invoices can. In quote mode the store replies to approve and
-> you convert the quote to an invoice in Xero. In invoice mode they can pay straight away through the
-> payment service on your invoice branding theme (Stripe, etc.).
+Line items copy QU-0003: item `80x40cm Mat` on account 220 (first mat $250, reprints $150) and item
+`FREIGHT` on account 280 ($25), GST on Income, tax inclusive.
 
 If Xero isn't configured or returns an error, the brief is **still emailed**. The design team's copy is
-marked `NO QUOTE` with the reason, and the store is told their quote will follow.
+marked `NO INVOICE` with the reason, and the store is told their invoice will follow.
 
 ### One-time setup: Xero Web app
 
@@ -81,7 +82,7 @@ The scopes requested are `offline_access accounting.contacts accounting.invoices
 (plus `openid profile email`). Since March 2026 `accounting.invoices` covers quotes. Xero refresh tokens
 rotate on every use and lapse after 60 days unused. The endpoint saves each new one, and a daily Vercel
 cron (`vercel.json → crons`) refreshes it so it never lapses. If the connection is ever lost (someone
-disconnects the app in Xero, or the store is cleared), briefs still email with **NO QUOTE** and the
+disconnects the app in Xero, or the store is cleared), briefs still email with **NO INVOICE** and the
 reason. Run the connect link again to fix it.
 
 Prefer a paid **Custom connection** instead? Set `XERO_MODE=custom`. It uses client credentials, and no

@@ -10,7 +10,7 @@ const customer = readCustomer({
 });
 const stores = [{ line1: "PENRITH", line2: "", qty: 2 }];
 const quote = quoteLines(stores, { ...readPricing({}), freight: 30 });   // tax inclusive by default
-const env = { XERO_MODE: "custom", XERO_CLIENT_ID: "id", XERO_CLIENT_SECRET: "secret", XERO_ACCOUNT_CODE: "200", XERO_ITEM_CODE_FREIGHT: "FREIGHT" };
+const env = { XERO_MODE: "custom", XERO_DOCUMENT: "quote", XERO_CLIENT_ID: "id", XERO_CLIENT_SECRET: "secret", XERO_ACCOUNT_CODE: "200", XERO_ITEM_CODE_FREIGHT: "FREIGHT" };
 
 /* A fake Xero: records every call, answers from `existing` for contact lookups */
 function fakeXero(existing = [], kv = {}) {
@@ -32,6 +32,9 @@ function fakeXero(existing = [], kv = {}) {
     }
     if (u.pathname.endsWith("/Contacts")) return json({ Contacts: [{ ContactID: "new-1", Name: body.Contacts[0].Name }] });
     if (u.pathname.endsWith("/Quotes")) return json({ Quotes: [{ QuoteID: "q-1", QuoteNumber: "QU-0004", SubTotal: 430, TotalTax: 43, Total: 473 }] });
+    if (u.pathname.endsWith("/Invoices")) return json({ Invoices: [{ InvoiceID: "i-1", InvoiceNumber: "INV-0107", SubTotal: 386.36, TotalTax: 38.64, Total: 425 }] });
+    if (u.pathname.endsWith("/Invoices/i-1/OnlineInvoice")) return json({ OnlineInvoices: [{ OnlineInvoiceUrl: "https://in.xero.com/abc" }] });
+    if (u.pathname.includes("/Invoices/i-1")) return new Response("%PDF-1.4", { status: 200, headers: { "Content-Type": "application/pdf" } });
     if (u.pathname.includes("/Quotes/q-1")) return new Response("%PDF-1.4", { status: 200, headers: { "Content-Type": "application/pdf" } });
     return new Response("{}", { status: 404 });
   };
@@ -52,7 +55,10 @@ test("new customer: looked up by ABN, email and name, then created, then quoted"
   const q = calls.find(c => c.path.endsWith("/Quotes")).body.Quotes[0];
   assert.equal(q.Contact.ContactID, "new-1");
   assert.equal(q.LineAmountTypes, "Inclusive");
-  assert.deepEqual(q.LineItems.map(l => [l.Quantity, l.UnitAmount, l.ItemCode]), [[1, 250, undefined], [1, 150, undefined], [1, 30, "FREIGHT"]]);
+  assert.deepEqual(q.LineItems.map(l => [l.Quantity, l.UnitAmount, l.ItemCode, l.AccountCode]), [[1, 250, "80x40cm Mat", "200"], [1, 150, "80x40cm Mat", "200"], [1, 30, "FREIGHT", "280"]]);
+  assert.match(q.LineItems[0].Description, /Your Customisations Applied \(Includes 45 minutes of design changes\)\nMister Minit price mat · Stores: PENRITH x2/);
+  assert.equal(q.LineItems[1].Description, "80x40cm Non-slip Mat - Colour Stitched - 4mm - Reprint");
+  assert.equal(q.BrandingThemeID, "f1738545-71a6-4461-b30c-71b8eb620fc5");
   assert.equal(doc.number, "QU-0004");
   assert.equal(doc.contact.created, true);
   assert.equal(doc.pdf.toString(), "%PDF-1.4");
@@ -83,4 +89,15 @@ test("web app: refreshes with the stored token, saves the rotated one, sends the
 test("web app without a connection fails with a clear message", async () => {
   fakeXero([], {});
   await assert.rejects(raiseXeroDocument({ ...env, XERO_MODE: undefined, KV_REST_API_URL: "https://kv.test", KV_REST_API_TOKEN: "t" }, { customer, stores, quote, reference: "x" }), /isn't connected yet/);
+});
+
+test("invoice is the default: approved invoice, due date, pay link and PDF", async () => {
+  const calls = fakeXero();
+  const doc = await raiseXeroDocument({ ...env, XERO_DOCUMENT: undefined }, { customer, stores, quote, reference: "Mat brief – PENRITH" });
+  const inv = calls.find(c => c.path.endsWith("/Invoices")).body.Invoices[0];
+  assert.equal(inv.Type, "ACCREC");
+  assert.equal(inv.Status, "AUTHORISED");
+  assert.match(inv.DueDate, /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal(inv.LineAmountTypes, "Inclusive");
+  assert.deepEqual([doc.kind, doc.number, doc.payUrl, doc.pdf.toString()], ["invoice", "INV-0107", "https://in.xero.com/abc", "%PDF-1.4"]);
 });

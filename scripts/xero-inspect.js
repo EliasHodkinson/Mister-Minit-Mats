@@ -27,7 +27,7 @@ const quote = (await get(`/Quotes?QuoteNumber=${encodeURIComponent(number)}`)).Q
 if (!quote) { console.error(`No quote numbered ${number}`); process.exit(1); }
 console.log(`${quote.QuoteNumber} · ${quote.Contact?.Name} · ${quote.Status} · amounts ${quote.LineAmountTypes} · total ${quote.Total}`);
 console.log(`Title:   ${quote.Title || "-"}\nSummary: ${quote.Summary || "-"}\nTerms:   ${quote.Terms || "-"}\nBranding theme: ${quote.BrandingThemeID || "-"}\n`);
-console.table(quote.LineItems.map(l => ({ Description: l.Description?.slice(0, 60), Qty: l.Quantity, Unit: l.UnitAmount, ItemCode: l.ItemCode || "", AccountCode: l.AccountCode, TaxType: l.TaxType })));
+console.table(quote.LineItems.map(l => ({ Description: l.Description, Qty: l.Quantity, Unit: l.UnitAmount, ItemCode: l.ItemCode || "", AccountCode: l.AccountCode, TaxType: l.TaxType })));
 
 const themes = (await get("/BrandingThemes")).BrandingThemes || [];
 console.log("\nBranding themes:"); for (const t of themes) console.log(`  ${t.BrandingThemeID}  ${t.Name}`);
