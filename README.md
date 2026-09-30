@@ -17,6 +17,7 @@ api/xero.js       one-time Xero connect / callback, status, and the daily keep-a
 lib/xero.js       Xero sign-in + find-or-create contact, raise quote/invoice, fetch PDF
 lib/store.js      key/value store (Upstash Redis) holding the Xero login
 lib/brief.js      turns the brief into the Ankor'd-branded HTML emails and a .csv
+lib/checklist.js  the designer's printable A4 checklist PDF (pdf-lib)
 lib/brand.js      Ankor'd colours, details and the embedded logo used in the emails
 lib/graph.js      Microsoft Graph sender (App Registration, client-credentials)
 lib/recaptcha.js  reCAPTCHA v3 server-side verification
@@ -99,11 +100,14 @@ Each submission sends **marketing@ankord.com.au** one email with:
 - the list of changes from the template
 - every section on the mat as a table: item, price, red-price flag, packages, tiers, combo deals,
   with changed rows highlighted orange and added rows green
-- attached: the render, a `.csv` of every line (for Illustrator) and the quote PDF
+- attached: the render, a printable **checklist PDF** (store names, notes, every change and every line
+  on the mat, each with a tick box; changed lines tinted orange, added green), a `.csv` of every line
+  (for Illustrator) and the invoice PDF
 
 Both emails carry the Ankor'd header, colours and footer. Reply-to on the designer copy is the
-store contact, so replying goes to them. The store gets a friendlier copy with the quote PDF
-attached, the next steps, the same render and tables, reply-to marketing@.
+store contact, so replying goes to them. The store gets a short email: the invoice number, total
+and due date, a **Pay invoice** button (Xero's online invoice), three numbered next steps, their order,
+changes and layout, with the invoice PDF attached. Reply-to is marketing@.
 
 ## Abuse protection
 
@@ -163,7 +167,7 @@ attached, the next steps, the same render and tables, reply-to marketing@.
 ## Deploy (Vercel)
 
 The project is laid out for Vercel: `index.html` is served as the site and `api/submit.js` becomes
-the endpoint at `/api/submit`. There are no npm dependencies.
+the endpoint at `/api/submit`. The only npm dependency is `pdf-lib` (for the checklist).
 
 ```bash
 vercel login

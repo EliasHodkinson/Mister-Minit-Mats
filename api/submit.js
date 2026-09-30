@@ -1,6 +1,6 @@
 /*
  * POST /api/submit — receives the brief from the Mat Builder, raises a Xero invoice (or quote) for the mats and emails it:
- *   1. to the Ankor'd design team (MAIL_TO) with the render inline + attached, a .csv of every line and the invoice PDF
+ *   1. to the Ankor'd design team (MAIL_TO) with the render, a printable checklist PDF, a .csv of every line and the invoice PDF
  *   2. a copy to the store contact (meta.contactEmail) with their invoice attached and a "pay now" link
  * Both are sent from MAIL_FROM through Microsoft Graph (see lib/graph.js). The Xero step (lib/xero.js) is
  * optional – when it isn't configured or fails, the brief still goes out and the team is told to raise it by hand.
@@ -12,6 +12,7 @@
  * `processSubmission` works from an Azure Function or Express route too.
  */
 import { buildBrief } from "../lib/brief.js";
+import { checklistPdf } from "../lib/checklist.js";
 import { sendMail } from "../lib/graph.js";
 import { verifyRecaptcha } from "../lib/recaptcha.js";
 import { createLimiter, rateLimitError } from "../lib/ratelimit.js";
@@ -112,13 +113,17 @@ export async function processSubmission(body, env, { ip = "unknown", limiter = c
   const brief = buildBrief(body, { order, doc, xeroError, docKind: docKind(env) });
   const render = imageAttachment(body.image);
   const quotePdf = pdfAttachment(doc);
+  // printable tick-list for the designer; a failure here never blocks the brief
+  let checklist = null;
+  try { checklist = { name: brief.checklistName, contentType: "application/pdf", contentBytes: (await checklistPdf(body, { order, doc })).toString("base64") }; }
+  catch (e) { console.error("checklist pdf failed:", e); }
 
   await send(env, {
     to: env.MAIL_TO,
     replyTo: [contact],
     subject: brief.subject,
     html: brief.designerHtml,
-    attachments: [logoAttachment(), render, textAttachment(`${brief.fileBase}.csv`, brief.csv, "text/csv"), quotePdf].filter(Boolean),
+    attachments: [logoAttachment(), render, checklist, textAttachment(`${brief.fileBase}.csv`, brief.csv, "text/csv"), quotePdf].filter(Boolean),
   });
 
   try {

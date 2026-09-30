@@ -44,7 +44,9 @@ test("designer email is Ankor'd-branded and carries the essentials", () => {
   for (const needle of ["cid:ankord-logo", "#08393a", "ankord.com.au", "HOUSE &amp; DOMESTIC KEYS", "Single Sided Key", "$10.95", "Bike Key", "Essential", "Battery / Gasket", "Key Pack", "No Birkenstock here", "cid:layout", "sam@example.com", "CHANGED (price)", "NEW", "Lee Family Holdings Pty Ltd", "ABN 51 824 753 556", "1 High St, Penrith NSW 2750", "BLACKTOWN WESTPOINT – 2 mats"]) {
     assert.ok(b.designerHtml.includes(needle), `designer html should include ${needle}`);
   }
-  assert.ok(b.customerHtml.includes("we've received your mat brief"));
+  assert.ok(b.customerHtml.includes("Brief received"));
+  assert.ok(b.customerHtml.includes("Next steps"));
+  assert.ok(!b.customerHtml.includes("Battery / Gasket"), "customer email skips the full content tables");
   assert.ok(b.customerHtml.includes("cid:ankord-logo"));
 });
 
@@ -61,7 +63,8 @@ test("without Xero a submission still sends both emails and flags the missing qu
   assert.equal(r.customerCopy, true);
   assert.equal(sent.length, 2);
   assert.deepEqual(sent[0].to, ["marketing@ankord.com.au"]);
-  assert.deepEqual(sent[0].attachments.map(a => a.name), ["ankord-logo.png", "layout.png", "mister-minit-mat-penrith.csv"]);
+  assert.deepEqual(sent[0].attachments.map(a => a.name), ["ankord-logo.png", "layout.png", "Checklist – PENRITH, BLACKTOWN WESTPOINT.pdf", "mister-minit-mat-penrith.csv"]);
+  assert.ok(Buffer.from(sent[0].attachments[2].contentBytes, "base64").subarray(0, 5).toString() === "%PDF-");
   assert.match(sent[0].subject, /NO INVOICE/);
   assert.ok(sent[0].html.includes("Please raise this one by hand"));
   assert.deepEqual(sent[1].to, ["sam@example.com"]);
@@ -81,7 +84,8 @@ test("with Xero the quote is raised once and its PDF goes to both emails", async
   assert.match(sent[0].subject, /Quote QU-0042/);
   assert.ok(sent[0].html.includes("new contact created"));
   assert.ok(!sent[1].html.includes("new contact created"), "the customer never sees whether they were already in Xero");
-  assert.ok(sent[1].html.includes("What happens next"));
+  assert.ok(sent[1].html.includes("Next steps"));
+  assert.ok(sent[1].html.includes("Quote QU-0042"));
 });
 
 test("a Xero failure doesn't lose the brief", async () => {
@@ -147,4 +151,13 @@ test("rate limit: sixth submission from one IP inside the window is refused with
 
 test("readEnv insists on the captcha secret", () => {
   assert.throws(() => readEnv({ MS_DIRECTORY_TENANT_ID: "t", MS_APPLICATION_CLIENT_ID: "c", MS_APP_CLIENT_SECRET: "s" }), /RECAPTCHA_SECRET_KEY/);
+});
+
+test("customer email leads with the pay button when Xero returns a pay link", () => {
+  const doc = { ...fakeDoc, kind: "invoice", number: "INV-0107", payUrl: "https://in.xero.com/abc", due: "2026-10-07" };
+  const b = buildBrief(payload, { doc });
+  assert.ok(b.customerHtml.includes('href="https://in.xero.com/abc"'));
+  assert.ok(b.customerHtml.includes("Pay invoice INV-0107"));
+  assert.ok(b.customerHtml.includes("Due 7 Oct 2026"));
+  assert.ok(b.customerHtml.indexOf("Pay invoice INV-0107") < b.customerHtml.indexOf("Next steps"));
 });
