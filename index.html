@@ -146,6 +146,16 @@
   .store-row .ico{margin-top:30px}
   @media (max-width:700px){ .store-row{grid-template-columns:24px minmax(0,1fr) 70px 26px} .store-row .l2{grid-column:2/4;grid-row:2} }
   .add-store{margin-top:10px}
+  .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  @media (max-width:560px){ .choices{grid-template-columns:1fr} }
+  .choice{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer}
+  .choice:hover{border-color:#c3c8d3}
+  .choice:has(input:checked){border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
+  .choice input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--navy);flex:none}
+  .choice-body{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+  .choice-top{display:flex;justify-content:space-between;gap:8px;color:var(--navy);font-size:14.5px}
+  .choice-price{font-weight:700}
+  .choice-desc{font-size:12.5px;color:var(--muted)}
   .check-line{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;margin:14px 0 0}
   .check-line input,.hl input,.featured input{width:16px;height:16px;accent-color:var(--navy)}
   /* order summary */
@@ -567,6 +577,7 @@ const DEFAULT = {
     legalName:"", tradingName:"", abn:"", firstName:"", lastName:"", contactEmail:"", contactPhone:"",
     billStreet:"", billSuburb:"", billState:"", billPostcode:"",
     deliverySame:true, delStreet:"", delSuburb:"", delState:"", delPostcode:"",
+    orderType:"new",     // "new" design, or "reprint" for stores that have ordered before
     notes:""
   },
   /* the stores this owner is ordering mats for – each mat is the same design with that store's name */
@@ -713,10 +724,13 @@ const DOC = () => PRICING.document === "quote" ? "quote" : "invoice";     // wha
 const money = n => "$" + Number(n || 0).toLocaleString("en-AU", { minimumFractionDigits:2, maximumFractionDigits:2 });
 const dollars = n => Number.isInteger(+n) ? "$" + n : money(n);     // "$250" in running text
 const totalMats = () => state.stores.reduce((n, st) => n + (Math.floor(+st.qty) || 0), 0);
+const isReprint = () => state.meta.orderType === "reprint";
 function orderLines() {
   const mats = totalMats(), p = PRICING, lines = [];
-  if (mats >= 1) lines.push({ label:`Price mat – ${MAT_SIZE}, your customisations applied`, desc:`Non-slip, colour stitched, 4 mm · includes ${p.designMinutes} minutes of design changes`, qty:1, unit:p.first });
-  if (mats >= 2) lines.push({ label:`Reprint${mats > 2 ? "s" : ""} – ${MAT_SIZE}`, desc:"Same design with each store's name", qty:mats-1, unit:p.extra });
+  if (isReprint()) {
+    if (mats >= 1) lines.push({ label:`Reprint${mats > 1 ? "s" : ""} – ${MAT_SIZE}`, desc:"Your existing design with each store's name", qty:mats, unit:p.extra });
+  } else if (mats >= 1) lines.push({ label:`Price mat – ${MAT_SIZE}, your customisations applied`, desc:`Non-slip, colour stitched, 4 mm · includes ${p.designMinutes} minutes of design changes`, qty:1, unit:p.first });
+  if (!isReprint() && mats >= 2) lines.push({ label:`Reprint${mats > 2 ? "s" : ""} – ${MAT_SIZE}`, desc:"Same design with each store's name", qty:mats-1, unit:p.extra });
   if (mats >= 1 && p.freight > 0) lines.push({ label:"Standard freight", desc:"", qty:1, unit:p.freight });
   lines.forEach(l => l.amount = Math.round(l.qty * l.unit * 100) / 100);
   const sum = lines.reduce((n, l) => n + l.amount, 0);
@@ -730,7 +744,11 @@ function orderSummaryHTML(q = orderLines()) {
     <tr class="tot"><td>${PRICING.includesGst ? "Includes GST" : "GST"}</td><td class="amt">${money(q.gst)}</td></tr>
     <tr class="grand"><td>Total (AUD)</td><td class="amt">${money(q.total)}</td></tr></table>`;
 }
-const refreshOrder = () => { const el = $("#order-summary"); if (el) el.innerHTML = orderSummaryHTML(); };
+const priceLine = () => { const p = PRICING; return `Mat size ${MAT_SIZE} · ${isReprint() ? `Each mat ${dollars(p.extra)}` : `First mat ${dollars(p.first)} incl. ${p.designMinutes} min design · Each extra mat ${dollars(p.extra)}`} · Freight ${dollars(p.freight)} · ${p.includesGst ? "Prices include GST" : "Plus GST"}`; };
+const refreshOrder = () => {
+  const el = $("#order-summary"); if (el) el.innerHTML = orderSummaryHTML();
+  const ml = $("#price-line"); if (ml) ml.textContent = priceLine();
+};
 fetch(SUBMIT_URL.replace(/submit$/, "pricing")).then(r => r.ok ? r.json() : null).then(d => {
   if (d?.pricing) { const before = DOC(); PRICING = { ...PRICING, ...d.pricing }; if (DOC() !== before) renderStep(); else refreshOrder(); }
 }).catch(() => {});
@@ -876,12 +894,20 @@ function storeRowHTML(st, i) {
     </div>`;
 }
 function storesStepHTML() {
-  const p = PRICING;
+  const p = PRICING, opt = (v, title, price, desc) => `<label class="choice"><input type="radio" name="orderType" data-meta="orderType" value="${v}">
+      <span class="choice-body"><span class="choice-top"><b>${title}</b><span class="choice-price">${price}</span></span><span class="choice-desc">${desc}</span></span></label>`;
   return stepHead("Stores", "Add each store that needs a mat. Every mat uses the same design with that store's name.") + `
+    <section class="card"><div class="body">
+      <h2 class="group">Order type</h2>
+      <div class="choices" role="radiogroup" aria-label="Order type">
+        ${opt("new", "New design", dollars(p.first), `First mat includes ${p.designMinutes} minutes of design changes`)}
+        ${opt("reprint", "Reprint", dollars(p.extra), "If you have ordered before. We reuse your existing design")}
+      </div>
+    </div></section>
     <section class="card"><div class="body">
       <div id="store-rows">${state.stores.map(storeRowHTML).join("")}</div>
       ${state.stores.length < MAX_STORES ? `<button class="btn small add-store" data-act="add-store">${icon("plus")} Add store</button>` : ""}
-      <p class="meta-line">Mat size ${MAT_SIZE} · First mat ${dollars(p.first)} incl. ${p.designMinutes} min design · Each extra mat ${dollars(p.extra)} · Freight ${dollars(p.freight)} · ${p.includesGst ? "Prices include GST" : "Plus GST"}</p>
+      <p class="meta-line" id="price-line">${priceLine()}</p>
     </div></section>
     <section class="card"><div class="body">
       <h2 class="group">Order total</h2>
@@ -1135,7 +1161,7 @@ function renderStep() {
   }
   $("#layout").classList.toggle("no-preview", s.id === "review");
   stepView.innerHTML = s.id === "stores" ? storesStepHTML() : s.id === "business" ? businessStepHTML() : s.id === "review" ? reviewStepHTML() : columnStepHTML(s);
-  document.querySelectorAll("[data-meta]").forEach(el => { const v = state.meta[el.dataset.meta]; if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? ""; });
+  document.querySelectorAll("[data-meta]").forEach(el => { const v = state.meta[el.dataset.meta]; if (el.type === "checkbox") el.checked = !!v; else if (el.type === "radio") el.checked = el.value === v; else el.value = v ?? ""; });
   renderStepper(); renderNav(); renderPreview();
   if (s.id === "review") { $("#mat-render").innerHTML = matHTML(null); fitRender(); }
   // bring the part of the mat being edited into view in the preview
@@ -1184,6 +1210,7 @@ form.addEventListener("input", e => {
     if (FIXED_META.includes(t.dataset.meta)) return;
     state.meta[t.dataset.meta] = t.type === "checkbox" ? t.checked : t.value; clearInvalid(t.closest(".field"));
     if (t.type === "checkbox") { save(); renderStep(); return; }   // shows / hides the delivery address
+    if (t.type === "radio") refreshOrder();                          // order type changes the price
   }
   else if (t.dataset.store) {
     const st = findStore(t.dataset.store); if (!st) return;

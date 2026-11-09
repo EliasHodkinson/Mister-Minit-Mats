@@ -17,7 +17,7 @@ import { sendMail } from "../lib/graph.js";
 import { verifyRecaptcha } from "../lib/recaptcha.js";
 import { createLimiter, rateLimitError } from "../lib/ratelimit.js";
 import { ANKORD_LOGO_PNG } from "../lib/brand.js";
-import { docKind, orderProblems, quoteLines, readCustomer, readPricing, readStores, storeLabel } from "../lib/order.js";
+import { docKind, orderProblems, quoteLines, readCustomer, readOrderType, readPricing, readStores, storeLabel } from "../lib/order.js";
 import { raiseXeroDocument, xeroConfigured } from "../lib/xero.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -101,7 +101,7 @@ export async function processSubmission(body, env, { ip = "unknown", limiter = c
 
   const stores = readStores(body);
   const customer = readCustomer(body.meta);
-  const order = { stores, customer, quote: quoteLines(stores, env.PRICING) };
+  const order = { stores, customer, quote: quoteLines(stores, env.PRICING, readOrderType(body.meta)) };
 
   // Raise the invoice / quote before emailing so both emails can carry it. A Xero problem never loses the brief.
   let doc = null, xeroError = null;

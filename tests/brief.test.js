@@ -112,6 +112,17 @@ test("pricing: first mat $250 with design, each extra $150, then freight", () =>
   assert.equal(inc.gst, 22.73);
 });
 
+test("pricing: a reprint order prices every mat at the reprint rate", () => {
+  const p = { ...readPricing({}), freight: 30, includesGst: false };
+  const one = quoteLines([{ line1: "A", qty: 1 }], p, "reprint");
+  assert.deepEqual(one.lines.map(l => [l.key, l.qty, l.amount]), [["extra", 1, 150], ["freight", 1, 30]]);
+  const three = quoteLines([{ line1: "A", qty: 1 }, { line1: "B", qty: 2 }], p, "reprint");
+  assert.deepEqual(three.lines.map(l => [l.key, l.qty, l.amount]), [["extra", 3, 450], ["freight", 1, 30]]);
+  assert.match(three.lines[0].description, /Reprint[\s\S]*Stores: A, B x2/);
+  assert.equal(three.orderType, "reprint");
+  assert.equal(quoteLines([{ line1: "A", qty: 1 }], p).lines[0].unit, 250);
+});
+
 test("ABN checksum and order validation", () => {
   assert.ok(isValidAbn("51 824 753 556"));
   assert.ok(!isValidAbn("51 824 753 557"));
