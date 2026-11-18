@@ -128,6 +128,9 @@ test("ABN checksum and order validation", () => {
   assert.ok(!isValidAbn("51 824 753 557"));
   assert.ok(!isValidAbn("1234"));
   assert.equal(formatAbn("51824753556"), "51 824 753 556");
+  assert.ok(isValidAbn("91698896276"));
+  assert.ok(isValidAbn("91 698 896 276"));
+  assert.ok(isValidAbn("９１６９８８９６２７６"));   // full-width digits
   assert.deepEqual(orderProblems(payload), []);
   const bad = orderProblems({ ...payload, stores: [{ line1: "", qty: 0 }], meta: { ...payload.meta, abn: "123", deliverySame: false } });
   assert.ok(bad.includes("Store 1 needs a name"));

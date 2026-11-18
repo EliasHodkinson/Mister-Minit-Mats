@@ -754,10 +754,17 @@ fetch(SUBMIT_URL.replace(/submit$/, "pricing")).then(r => r.ok ? r.json() : null
 }).catch(() => {});
 
 /* ABN: 11 digits with the ATO checksum */
-const abnDigits = s => String(s ?? "").replace(/\D/g, "");
+/* NFKC turns full-width digits (some phone keyboards / pasted text) into plain 0–9 before stripping */
+const abnDigits = s => String(s ?? "").normalize("NFKC").replace(/\D/g, "");
 function isValidAbn(s) {
   const d = abnDigits(s), W = [10,1,3,5,7,9,11,13,15,17,19];
   return d.length === 11 && [...d].reduce((a, ch, i) => a + (+ch - (i ? 0 : 1)) * W[i], 0) % 89 === 0;
+}
+const formatAbn = s => { const d = abnDigits(s); return d.length === 11 ? d.replace(/^(\d{2})(\d{3})(\d{3})(\d{3})$/, "$1 $2 $3 $4") : String(s ?? "").trim(); };
+function abnProblem(s) {
+  const n = abnDigits(s).length;
+  if (n !== 11) return `Check the ABN – it has ${n} digit${n === 1 ? "" : "s"}, it needs 11`;
+  return isValidAbn(s) ? "" : "That ABN doesn't pass the ATO check – look for a mistyped digit";
 }
 const colName = c => (COLUMNS.find(([k]) => k === c) || [c, c])[1];
 const colTheme = c => (COLUMNS.find(([k]) => k === c) || [c, c, c])[2];
@@ -974,7 +981,7 @@ function businessErrors() {
   need("legalName", "Enter the legal entity name");
   need("tradingName", "Enter the trading name");
   if (!norm(m.abn)) errs.push(['[data-meta="abn"]', "Enter the ABN"]);
-  else if (!isValidAbn(m.abn)) errs.push(['[data-meta="abn"]', "Check the ABN – it should be 11 digits"]);
+  else if (abnProblem(m.abn)) errs.push(['[data-meta="abn"]', abnProblem(m.abn)]);
   need("firstName", "Enter a first name");
   need("lastName", "Enter a last name");
   if (!norm(m.contactEmail)) errs.push(['[data-meta="contactEmail"]', "Enter an email address"]);
@@ -1204,6 +1211,13 @@ function goTo(i, viaNext=false) {
 }
 
 /* ===================== EVENTS ===================== */
+/* Tidy the ABN into "12 345 678 901" once the customer leaves the field, whichever way it was typed */
+form.addEventListener("focusout", e => {
+  const t = e.target;
+  if (t.dataset?.meta !== "abn") return;
+  const v = formatAbn(t.value);
+  if (v !== t.value) { t.value = v; state.meta.abn = v; save(); }
+});
 form.addEventListener("input", e => {
   const t = e.target;
   if (t.dataset.meta) {
