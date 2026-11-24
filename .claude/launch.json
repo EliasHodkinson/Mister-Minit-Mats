@@ -10,6 +10,14 @@
         "8765"
       ],
       "port": 8765
+    },
+    {
+      "name": "app-mock",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        ".claude/mock/app-mock.mjs"
+      ],
+      "port": 8790
     }
   ]
 }

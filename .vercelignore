@@ -5,3 +5,4 @@ tests
 README.md
 .env*
 scripts
+db

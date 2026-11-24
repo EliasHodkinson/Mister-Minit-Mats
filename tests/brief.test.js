@@ -1,177 +1,172 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildBrief, briefCsv } from "../lib/brief.js";
-import { processSubmission, readEnv } from "../api/submit.js";
-import { createLimiter } from "../lib/ratelimit.js";
-import { isValidAbn, formatAbn, orderProblems, quoteLines, readPricing } from "../lib/order.js";
+import { processOrder, readEnv, briefPayload } from "../api/submit.js";
+import { isValidAbn, formatAbn, profileProblems, readProfile, readPricing } from "../lib/order.js";
+import {
+  TEMPLATE_SECTIONS, clone, designChanges, matPrice, quoteLines, storeProblems, annotate, newDesignState, changesToNextTier, blankItem,
+} from "../shared/mat.js";
 
-const payload = {
-  meta: {
-    legalName: "Lee Family Holdings Pty Ltd", tradingName: "Mister Minit Penrith", abn: "51 824 753 556",
-    firstName: "Sam", lastName: "Lee", contactName: "Sam Lee", contactEmail: "sam@example.com", contactPhone: "0400 000 000",
-    billStreet: "1 High St", billSuburb: "Penrith", billState: "NSW", billPostcode: "2750", deliverySame: true,
-    notes: "No Birkenstock here", tagline: "KEYS • CAR KEYS", gst: "ALL PRICES INCLUDE GST",
-  },
-  stores: [{ line1: "PENRITH", line2: "", qty: 1 }, { line1: "BLACKTOWN", line2: "WESTPOINT", qty: 2 }],
-  sections: [
-    { id: "house", title: "HOUSE & DOMESTIC KEYS", kind: "list", color: "orange", column: "1", footnote: "LIFETIME GUARANTEE", status: "", changedFields: [],
-      items: [
-        { id: "house-1", label: "Single Sided Key", price: "$10.95", hl: true, status: "changed", changedFields: ["price"] },
-        { id: "n1", label: "Bike Key", price: "$12", hl: false, status: "new", changedFields: [] },
-      ] },
-    { id: "watchpk", title: "WATCH SERVICE PACKAGES", kind: "packages", color: "green", column: "4", badge: "SAVE UP TO $42", status: "", changedFields: [],
-      items: [{ id: "watchpk-1", num: "1", label: "Essential", desc: "Battery\nGasket", price: "$30", save: "SAVE $8", featured: true, status: "", changedFields: [] }] },
-    { id: "combos", title: "VALUE COMBO DEALS", kind: "combos", color: "blue", column: "bottom", status: "", changedFields: [],
-      items: [{ id: "combos-1", label: "Key Pack", desc: "3 or more, 10% off", was: "$90", price: "$72", save: "SAVE $18", note: "", status: "", changedFields: [] }] },
-  ],
-  changes: ["Store name · line 1: was \"BLACKTOWN\", now \"PENRITH\"", "HOUSE & DOMESTIC KEYS · \"Single Sided Key\": price was \"$9.95\", now \"$10.95\""],
-  lookup: { columns: [{ key: "1", name: "Column 1 – left", theme: "Keys & sharpening" }, { key: "4", name: "Column 4", theme: "Watches" }, { key: "bottom", name: "Bottom band", theme: "Deals & guarantee" }], colors: { orange: "Orange (keys)", green: "Green (watches / garage)", blue: "Blue (engraving / combos)" } },
-  submittedAt: "2026-09-08T04:00:00.000Z",
-  image: { dataUrl: "data:image/png;base64,iVBORw0KGgo=", width: 3000, height: 1500 },
-  recaptchaToken: "test-token",
+/* ---------- fixtures ---------- */
+const customerRow = {
+  id: "user_01TEST", email: "sam@example.com", first_name: "Sam", last_name: "Lee",
+  legal_name: "Lee Family Holdings Pty Ltd", trading_name: "Mister Minit Penrith", abn: "51 824 753 556", phone: "0400 000 000",
+  billing: { street: "1 High St", suburb: "Penrith", state: "NSW", postcode: "2750" }, delivery_same: true, delivery: {},
+  xero_contact_id: null,
 };
-
-const env = readEnv({ MS_DIRECTORY_TENANT_ID: "t", MS_APPLICATION_CLIENT_ID: "c", MS_APP_CLIENT_SECRET: "s", RECAPTCHA_SECRET_KEY: "r", MAIL_FROM: "marketing@ankord.com.au", MAIL_TO: "marketing@ankord.com.au", FREIGHT_PRICE: "30" });
+function editedState() {
+  const st = newDesignState(clone(TEMPLATE_SECTIONS));
+  st.stores = [{ id: "s1", line1: "PENRITH", line2: "", qty: 1 }, { id: "s2", line1: "BLACKTOWN", line2: "WESTPOINT", qty: 2 }];
+  const sec = st.sections.find(s => s.kind === "list");
+  sec.items[0].price = "$99.95";                         // 1: edited line
+  sec.items.push({ ...blankItem("list"), label: "Bike Key", price: "$12" });   // 2: added line
+  st.notes = "No Birkenstock here";
+  return st;
+}
+/** a stand-in for the Neon tagged template: records every statement, returns a row for inserts */
+function fakeSql() {
+  const calls = [];
+  const sql = async (strings, ...values) => {
+    const text = strings.join("?");
+    calls.push({ text, values });
+    if (/^\s*insert into orders/i.test(text)) return [{ id: "order-1", number: "MM-1001" }];
+    return [];
+  };
+  sql.calls = calls;
+  return sql;
+}
+const env = readEnv({ MS_DIRECTORY_TENANT_ID: "t", MS_APPLICATION_CLIENT_ID: "c", MS_APP_CLIENT_SECRET: "s", MAIL_FROM: "marketing@ankord.com.au", MAIL_TO: "marketing@ankord.com.au" });
 const xeroEnv = { ...env, XERO_CLIENT_ID: "x", XERO_CLIENT_SECRET: "y" };
-const fakeDoc = { kind: "quote", id: "q1", number: "QU-0042", subTotal: 580, tax: 58, total: 638, pdf: Buffer.from("%PDF-1.4 test"), payUrl: null, contact: { contactId: "c1", name: "Lee Family Holdings Pty Ltd", created: true } };
-const okVerify = async () => ({ score: 0.9, hostname: "apps.ankord.com.au" });
-const noLimit = { name: "none", hit: async () => ({ allowed: true, count: 1, retryAfter: 0 }) };
+const design = { id: "design-1", name: "New mat", base_sections: null, base_design_id: null };
+const image = { dataUrl: "data:image/png;base64,iVBORw0KGgo=", width: 3000, height: 1500 };
+const fakeDoc = { kind: "invoice", id: "i1", number: "INV-0107", subTotal: 440, tax: 44, total: 490, pdf: Buffer.from("%PDF-1.4 test"),
+  payUrl: "https://in.xero.com/abc", due: "2026-10-07", contact: { contactId: "c1", name: "Lee Family Holdings Pty Ltd", created: true } };
 
-test("designer email is Ankor'd-branded and carries the essentials", () => {
-  const b = buildBrief(payload);
-  assert.match(b.subject, /PENRITH, BLACKTOWN WESTPOINT/);
-  assert.match(b.subject, /3 mats, 2 changes/);
-  for (const needle of ["cid:ankord-logo", "#08393a", "ankord.com.au", "HOUSE &amp; DOMESTIC KEYS", "Single Sided Key", "$10.95", "Bike Key", "Essential", "Battery / Gasket", "Key Pack", "No Birkenstock here", "cid:layout", "sam@example.com", "CHANGED (price)", "NEW", "Lee Family Holdings Pty Ltd", "ABN 51 824 753 556", "1 High St, Penrith NSW 2750", "BLACKTOWN WESTPOINT – 2 mats"]) {
-    assert.ok(b.designerHtml.includes(needle), `designer html should include ${needle}`);
-  }
-  assert.ok(b.customerHtml.includes("Brief received"));
-  assert.ok(b.customerHtml.includes("Next steps"));
-  assert.ok(!b.customerHtml.includes("Battery / Gasket"), "customer email skips the full content tables");
-  assert.ok(b.customerHtml.includes("cid:ankord-logo"));
+/* ---------- change counting ---------- */
+test("the untouched template has no changes", () => {
+  assert.equal(designChanges(clone(TEMPLATE_SECTIONS)).count, 0);
 });
 
-test("csv has a header plus one row per line", () => {
-  const rows = briefCsv(payload).split("\r\n");
-  assert.equal(rows.length, 1 + 4);
-  assert.ok(rows[0].startsWith("Column,Section,Type"));
-  assert.ok(rows[2].includes("Bike Key"));
+test("changes are counted per line", () => {
+  const s = clone(TEMPLATE_SECTIONS), list = s.find(x => x.kind === "list");
+  list.items[0].price = "$1";  list.items[0].label = "Something else";   // same line, two fields → 1
+  assert.equal(designChanges(s).count, 1);
+  list.items.splice(1, 1);                                                // removed line → +1
+  assert.equal(designChanges(s).count, 2);
+  list.title = "NEW TITLE";                                               // section setting → +1
+  assert.equal(designChanges(s).count, 3);
+  s.push({ id: "x1", title: "EXTRA", color: "orange", column: "1", kind: "list", items: [1, 2, 3].map(n => ({ ...blankItem("list"), label: `Line ${n}` })) });
+  assert.equal(designChanges(s).count, 6, "a new section counts one per line");
+  const gone = s.findIndex(x => x.id !== list.id && x.id !== "x1");
+  s.splice(gone, 1);                                                      // removed section → +1
+  assert.equal(designChanges(s).count, 7);
+  assert.ok(designChanges(s).list.every(c => typeof c.text === "string" && c.n >= 1));
 });
 
-test("without Xero a submission still sends both emails and flags the missing quote", async () => {
-  const sent = [];
-  const r = await processSubmission(payload, env, { ip: "1.2.3.4", limiter: noLimit, verify: okVerify, send: async (_e, m) => { sent.push(m); } });
-  assert.equal(r.customerCopy, true);
-  assert.equal(sent.length, 2);
-  assert.deepEqual(sent[0].to, ["marketing@ankord.com.au"]);
-  assert.deepEqual(sent[0].attachments.map(a => a.name), ["ankord-logo.png", "layout.png", "Checklist – PENRITH, BLACKTOWN WESTPOINT.pdf", "mister-minit-mat-penrith.csv"]);
-  assert.ok(Buffer.from(sent[0].attachments[2].contentBytes, "base64").subarray(0, 5).toString() === "%PDF-");
-  assert.match(sent[0].subject, /NO INVOICE/);
-  assert.ok(sent[0].html.includes("Please raise this one by hand"));
-  assert.deepEqual(sent[1].to, ["sam@example.com"]);
-  assert.deepEqual(sent[1].attachments.map(a => a.name), ["ankord-logo.png", "layout.png"]);
+test("a reorder counts against the previous design, not the template", () => {
+  const prev = editedState().sections;
+  assert.equal(designChanges(clone(prev), prev).count, 0);
+  const next = clone(prev); next[0].items[0].price = "$5";
+  assert.equal(designChanges(next, prev).count, 1);
 });
 
-test("with Xero the quote is raised once and its PDF goes to both emails", async () => {
-  const sent = [], raised = [];
-  const raise = async (_e, o) => { raised.push(o); return fakeDoc; };
-  const r = await processSubmission(payload, xeroEnv, { ip: "1.2.3.4", limiter: noLimit, verify: okVerify, send: async (_e, m) => { sent.push(m); }, raise });
-  assert.equal(raised.length, 1);
-  assert.equal(raised[0].customer.abn, "51 824 753 556");
-  assert.equal(raised[0].quote.mats, 3);
-  assert.equal(r.doc.number, "QU-0042");
-  assert.ok(sent[0].attachments.some(a => a.name === "Quote QU-0042.pdf"));
-  assert.ok(sent[1].attachments.some(a => a.name === "Quote QU-0042.pdf"));
-  assert.match(sent[0].subject, /Quote QU-0042/);
-  assert.ok(sent[0].html.includes("new contact created"));
-  assert.ok(!sent[1].html.includes("new contact created"), "the customer never sees whether they were already in Xero");
-  assert.ok(sent[1].html.includes("Next steps"));
-  assert.ok(sent[1].html.includes("Quote QU-0042"));
+test("annotate marks new and changed lines for the designer", () => {
+  const st = editedState(), a = annotate(st.sections, TEMPLATE_SECTIONS), list = a.find(s => s.kind === "list");
+  assert.equal(list.items[0].status, "changed");
+  assert.equal(list.items.at(-1).status, "new");
 });
 
-test("a Xero failure doesn't lose the brief", async () => {
-  const sent = [];
-  const raise = async () => { throw new Error("Xero creating the quote failed: Account code '999' is not a valid code"); };
-  const r = await processSubmission(payload, xeroEnv, { ip: "1.2.3.4", limiter: noLimit, verify: okVerify, send: async (_e, m) => { sent.push(m); }, raise });
-  assert.equal(sent.length, 2);
-  assert.match(r.xeroError, /not a valid code/);
-  assert.ok(sent[0].html.includes("not a valid code"));
+/* ---------- pricing ---------- */
+test("mat price tiers: $150 up to 10 changes, then $15 per 10, capped at $250", () => {
+  const cases = [[0, 150], [10, 150], [11, 165], [20, 165], [21, 180], [30, 180], [31, 195], [41, 210], [51, 225], [61, 240], [70, 240], [71, 250], [500, 250]];
+  for (const [n, p] of cases) assert.equal(matPrice(n), p, `${n} changes`);
+  assert.equal(changesToNextTier(8), 3);
+  assert.equal(changesToNextTier(71), null);
 });
 
-test("pricing: first mat $250 with design, each extra $150, then freight", () => {
-  assert.deepEqual([readPricing({}).freight, readPricing({}).includesGst], [25, true]);
-  const p = { ...readPricing({}), freight: 30, includesGst: false };
-  const one = quoteLines([{ line1: "A", qty: 1 }], p);
-  assert.deepEqual(one.lines.map(l => [l.key, l.qty, l.amount]), [["first", 1, 250], ["freight", 1, 30]]);
-  assert.equal(one.total, 308);
-  const three = quoteLines([{ line1: "A", qty: 1 }, { line1: "B", qty: 2 }], p);
-  assert.deepEqual(three.lines.map(l => [l.key, l.qty, l.amount]), [["first", 1, 250], ["extra", 2, 300], ["freight", 1, 30]]);
-  assert.equal(three.subTotal, 580);
-  assert.equal(three.gst, 58);
-  const inc = quoteLines([{ line1: "A", qty: 1 }], { ...p, freight: 0, includesGst: true });
-  assert.equal(inc.total, 250);
-  assert.equal(inc.gst, 22.73);
+test("quote: first mat by changes, each extra mat $150, $25 freight, GST inclusive", () => {
+  const q = quoteLines([{ line1: "A", qty: 1 }, { line1: "B", qty: 2 }], readPricing({}), { changeCount: 12 });
+  assert.deepEqual(q.lines.map(l => [l.key, l.qty, l.amount]), [["first", 1, 165], ["extra", 2, 300], ["freight", 1, 25]]);
+  assert.equal(q.total, 490);
+  assert.equal(q.gst, 44.55);
+  const re = quoteLines([{ line1: "A", qty: 1 }], {}, { changeCount: 0, isReorder: true });
+  assert.equal(re.lines[0].amount, 150);
+  assert.match(re.lines[0].label, /Reprint/);
+  assert.match(re.lines[0].description, /Reorder/);
+  const ex = quoteLines([{ line1: "A", qty: 1 }], { freight: 30, includesGst: false }, { changeCount: 0 });
+  assert.equal(ex.total, 198);   // (150 + 30) + 10% GST
 });
 
-test("pricing: a reprint order prices every mat at the reprint rate", () => {
-  const p = { ...readPricing({}), freight: 30, includesGst: false };
-  const one = quoteLines([{ line1: "A", qty: 1 }], p, "reprint");
-  assert.deepEqual(one.lines.map(l => [l.key, l.qty, l.amount]), [["extra", 1, 150], ["freight", 1, 30]]);
-  const three = quoteLines([{ line1: "A", qty: 1 }, { line1: "B", qty: 2 }], p, "reprint");
-  assert.deepEqual(three.lines.map(l => [l.key, l.qty, l.amount]), [["extra", 3, 450], ["freight", 1, 30]]);
-  assert.match(three.lines[0].description, /Reprint[\s\S]*Stores: A, B x2/);
-  assert.equal(three.orderType, "reprint");
-  assert.equal(quoteLines([{ line1: "A", qty: 1 }], p).lines[0].unit, 250);
-});
-
-test("ABN checksum and order validation", () => {
+/* ---------- validation ---------- */
+test("ABN checksum and profile validation", () => {
   assert.ok(isValidAbn("51 824 753 556"));
   assert.ok(!isValidAbn("51 824 753 557"));
   assert.ok(!isValidAbn("1234"));
-  assert.equal(formatAbn("51824753556"), "51 824 753 556");
-  assert.ok(isValidAbn("91698896276"));
-  assert.ok(isValidAbn("91 698 896 276"));
   assert.ok(isValidAbn("９１６９８８９６２７６"));   // full-width digits
-  assert.deepEqual(orderProblems(payload), []);
-  const bad = orderProblems({ ...payload, stores: [{ line1: "", qty: 0 }], meta: { ...payload.meta, abn: "123", deliverySame: false } });
-  assert.ok(bad.includes("Store 1 needs a name"));
-  assert.ok(bad.some(p => /quantity/.test(p)));
-  assert.ok(bad.includes("ABN is missing or invalid"));
-  assert.ok(bad.some(p => /Delivery address/.test(p)));
+  assert.equal(formatAbn("51824753556"), "51 824 753 556");
+  const good = readProfile({ legalName: "A Pty Ltd", tradingName: "A", abn: "51824753556", firstName: "S", lastName: "L", phone: "1",
+    billing: { street: "1 St", suburb: "X", state: "nsw", postcode: "2000" }, deliverySame: true }, "a@b.co");
+  assert.deepEqual(profileProblems(good), []);
+  const bad = profileProblems(readProfile({ ...good, abn: "123", deliverySame: false, delivery: {} }, "a@b.co"));
+  assert.ok(bad.some(p => p.field === "abn"));
+  assert.ok(bad.some(p => p.field === "delivery.street"));
 });
 
-test("validation rejects bad input before any mail or captcha call", async () => {
-  const never = async () => { throw new Error("should not be called"); };
-  await assert.rejects(processSubmission({ ...payload, meta: { ...payload.meta, contactEmail: "nope" } }, env, { limiter: noLimit, verify: never, send: never }), /Contact email/);
-  await assert.rejects(processSubmission({ ...payload, image: { dataUrl: "data:text/html;base64,AAAA" } }, env, { limiter: noLimit, verify: never, send: never }), /PNG or JPEG/);
-  await assert.rejects(processSubmission({ ...payload, sections: "x" }, env, { limiter: noLimit, verify: never, send: never }), /Sections/);
-  await assert.rejects(processSubmission({ ...payload, stores: [] }, env, { limiter: noLimit, verify: never, send: never, raise: never }), /at least one store/);
+test("store validation", () => {
+  assert.deepEqual(storeProblems([{ line1: "A", qty: 1 }]), []);
+  const p = storeProblems([{ line1: "", qty: 0 }]);
+  assert.ok(p.includes("Store 1 needs a name"));
+  assert.ok(p.some(x => /between/.test(x)));
+  assert.ok(storeProblems([]).length);
 });
 
-test("a failed captcha blocks sending", async () => {
-  const never = async () => { throw new Error("should not be called"); };
-  const badVerify = async () => { throw Object.assign(new Error("This submission looked automated"), { status: 403 }); };
-  await assert.rejects(processSubmission(payload, env, { limiter: noLimit, verify: badVerify, send: never }), { status: 403 });
+/* ---------- brief + order flow ---------- */
+test("designer brief carries the order number, changes and price", () => {
+  const st = editedState(), changes = designChanges(st.sections);
+  const payload = briefPayload({ state: st, customer: readProfile({ ...customerRow, legalName: customerRow.legal_name, tradingName: customerRow.trading_name, firstName: "Sam", lastName: "Lee", billing: customerRow.billing, deliverySame: true }, customerRow.email),
+    changes, sections: annotate(st.sections, TEMPLATE_SECTIONS), submittedAt: "2026-09-08T04:00:00.000Z", image, orderNumber: "MM-1001" });
+  const b = buildBrief(payload);
+  assert.match(b.subject, /MM-1001/);
+  assert.match(b.subject, /3 mats, 2 changes/);
+  for (const needle of ["cid:ankord-logo", "Bike Key", "$99.95", "No Birkenstock here"]) assert.ok(b.designerHtml.includes(needle), needle);
+  assert.ok(briefCsv(payload).split("\r\n").length > 10);
 });
 
-test("rate limit: sixth submission from one IP inside the window is refused with 429", async () => {
-  const limiter = createLimiter({});     // in-memory store
-  const sent = [];
-  const opts = { ip: "9.9.9.9", limiter, verify: okVerify, send: async (_e, m) => { sent.push(m); } };
-  const smallEnv = { ...env, LIMIT_EMAIL: 100, LIMIT_GLOBAL: 100 };
-  for (let i = 0; i < 5; i++) await processSubmission(payload, smallEnv, opts);
-  await assert.rejects(processSubmission(payload, smallEnv, opts), { status: 429 });
-  assert.equal(sent.length, 10);
+test("without Xero an order is still saved and both emails go out", async () => {
+  const sql = fakeSql(), sent = [];
+  const r = await processOrder({ customerRow, design, state: editedState(), image }, env, { sql, send: async (_e, m) => { sent.push(m); }, accountUrl: "https://x/misterminit/#/orders/" });
+  assert.equal(r.order.number, "MM-1001");
+  assert.equal(r.changes.count, 2);
+  assert.equal(r.quote.total, 475);     // 150 + 2 × 150 + 25
+  assert.match(r.xeroError, /Xero isn't connected/);
+  assert.ok(sql.calls[0].text.startsWith("\n    insert into orders") || /insert into orders/.test(sql.calls[0].text));
+  assert.ok(sql.calls.some(c => /update designs set/.test(c.text)), "design is marked ordered");
+  assert.equal(sent.length, 2);
+  assert.deepEqual(sent[0].to, ["marketing@ankord.com.au"]);
+  assert.ok(sent[0].attachments.some(a => a.name.endsWith(".pdf") && a.name.startsWith("Checklist")));
+  assert.match(sent[0].subject, /NO INVOICE/);
+  assert.deepEqual(sent[1].to, ["sam@example.com"]);
+  assert.ok(sent[1].html.includes("https://x/misterminit/#/orders/order-1"), "customer email links to the order in their account");
 });
 
-test("readEnv insists on the captcha secret", () => {
-  assert.throws(() => readEnv({ MS_DIRECTORY_TENANT_ID: "t", MS_APPLICATION_CLIENT_ID: "c", MS_APP_CLIENT_SECRET: "s" }), /RECAPTCHA_SECRET_KEY/);
+test("with Xero the invoice is raised once, the contact saved, and the PDF attached", async () => {
+  const sql = fakeSql(), sent = [], raised = [];
+  const raise = async (_e, o) => { raised.push(o); return fakeDoc; };
+  const r = await processOrder({ customerRow, design, state: editedState(), image }, xeroEnv, { sql, send: async (_e, m) => { sent.push(m); }, raise });
+  assert.equal(raised.length, 1);
+  assert.equal(raised[0].customer.abn, "51 824 753 556");
+  assert.match(raised[0].reference, /^MM-1001/);
+  assert.equal(r.doc.number, "INV-0107");
+  assert.ok(sql.calls.some(c => /update customers set xero_contact_id/.test(c.text)));
+  assert.ok(sent[0].attachments.some(a => a.name === "Invoice INV-0107.pdf"));
+  assert.ok(sent[1].html.includes('href="https://in.xero.com/abc"'));
 });
 
-test("customer email leads with the pay button when Xero returns a pay link", () => {
-  const doc = { ...fakeDoc, kind: "invoice", number: "INV-0107", payUrl: "https://in.xero.com/abc", due: "2026-10-07" };
-  const b = buildBrief(payload, { doc });
-  assert.ok(b.customerHtml.includes('href="https://in.xero.com/abc"'));
-  assert.ok(b.customerHtml.includes("Pay invoice INV-0107"));
-  assert.ok(b.customerHtml.includes("Due 7 Oct 2026"));
-  assert.ok(b.customerHtml.indexOf("Pay invoice INV-0107") < b.customerHtml.indexOf("Next steps"));
+test("a Xero failure or email failure doesn't lose the order", async () => {
+  const sql = fakeSql();
+  const raise = async () => { throw new Error("Account code '999' is not a valid code"); };
+  const r = await processOrder({ customerRow, design, state: editedState(), image }, xeroEnv, { sql, raise, send: async () => { throw new Error("Graph down"); } });
+  assert.match(r.xeroError, /not a valid code/);
+  assert.equal(r.customerCopy, false);
+  assert.ok(sql.calls.some(c => /email_error/.test(c.text)));
 });

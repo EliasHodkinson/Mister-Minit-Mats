@@ -1,53 +1,37 @@
 {
   "functions": {
-    "api/submit.js": {
-      "maxDuration": 60
-    }
+    "api/submit.js": { "maxDuration": 60 },
+    "api/me.js": { "maxDuration": 30 }
   },
   "redirects": [
-    {
-      "source": "/",
-      "destination": "/misterminit",
-      "permanent": false
-    }
+    { "source": "/", "destination": "/misterminit", "permanent": false }
   ],
   "rewrites": [
-    {
-      "source": "/misterminit",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/misterminit/",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/misterminit/api/submit",
-      "destination": "/api/submit"
-    },
-    {
-      "source": "/misterminit/api/pricing",
-      "destination": "/api/pricing"
-    },
-    {
-      "source": "/misterminit/api/xero/:action",
-      "destination": "/api/xero?action=:action"
-    }
+    { "source": "/misterminit", "destination": "/index.html" },
+    { "source": "/misterminit/", "destination": "/index.html" },
+    { "source": "/misterminit/admin", "destination": "/admin.html" },
+    { "source": "/misterminit/admin/", "destination": "/admin.html" },
+    { "source": "/misterminit/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/misterminit/shared/:path*", "destination": "/shared/:path*" },
+    { "source": "/misterminit/api/auth/:action", "destination": "/api/auth?action=:action" },
+    { "source": "/misterminit/api/xero/:action", "destination": "/api/xero?action=:action" },
+    { "source": "/misterminit/api/:fn(me|designs|orders|admin|submit|pricing)", "destination": "/api/:fn" }
   ],
   "headers": [
     {
-      "source": "/api/(submit|xero)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
-      ]
+      "source": "/api/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    },
+    {
+      "source": "/(index|admin).html",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
+      "source": "/(assets|shared)/(.*).(js|css)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
     }
   ],
   "crons": [
-    {
-      "path": "/api/xero?action=refresh",
-      "schedule": "0 18 * * *"
-    }
+    { "path": "/api/xero?action=refresh", "schedule": "0 18 * * *" }
   ]
 }

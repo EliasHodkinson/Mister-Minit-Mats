@@ -1,15 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { raiseXeroDocument, resetXeroToken, TOKEN_KEY } from "../lib/xero.js";
-import { quoteLines, readCustomer, readPricing } from "../lib/order.js";
+import { quoteLines, readProfile, readPricing } from "../lib/order.js";
 
-const customer = readCustomer({
+const customer = readProfile({
   legalName: "Lee Family Holdings Pty Ltd", tradingName: "Mister Minit Penrith", abn: "51824753556",
-  firstName: "Sam", lastName: "Lee", contactEmail: "Sam@Example.com", contactPhone: "0400 000 000",
-  billStreet: "1 High St", billSuburb: "Penrith", billState: "nsw", billPostcode: "2750", deliverySame: true,
-});
+  firstName: "Sam", lastName: "Lee", phone: "0400 000 000",
+  billing: { street: "1 High St", suburb: "Penrith", state: "nsw", postcode: "2750" }, deliverySame: true,
+}, "Sam@Example.com");
 const stores = [{ line1: "PENRITH", line2: "", qty: 2 }];
-const quote = quoteLines(stores, { ...readPricing({}), freight: 30 });   // tax inclusive by default
+const quote = quoteLines(stores, { ...readPricing({}), freight: 30 }, { changeCount: 25 });   // tax inclusive by default
 const env = { XERO_MODE: "custom", XERO_DOCUMENT: "quote", XERO_CLIENT_ID: "id", XERO_CLIENT_SECRET: "secret", XERO_ACCOUNT_CODE: "200", XERO_ITEM_CODE_FREIGHT: "FREIGHT" };
 
 /* A fake Xero: records every call, answers from `existing` for contact lookups */
@@ -55,8 +55,8 @@ test("new customer: looked up by ABN, email and name, then created, then quoted"
   const q = calls.find(c => c.path.endsWith("/Quotes")).body.Quotes[0];
   assert.equal(q.Contact.ContactID, "new-1");
   assert.equal(q.LineAmountTypes, "Inclusive");
-  assert.deepEqual(q.LineItems.map(l => [l.Quantity, l.UnitAmount, l.ItemCode, l.AccountCode]), [[1, 250, "80x40cm Mat", "200"], [1, 150, "80x40cm Mat", "200"], [1, 30, "FREIGHT", "280"]]);
-  assert.match(q.LineItems[0].Description, /Your Customisations Applied \(Includes 45 minutes of design changes\)\nMister Minit price mat · Stores: PENRITH x2/);
+  assert.deepEqual(q.LineItems.map(l => [l.Quantity, l.UnitAmount, l.ItemCode, l.AccountCode]), [[1, 180, "80x40cm Mat", "200"], [1, 150, "80x40cm Mat", "200"], [1, 30, "FREIGHT", "280"]]);
+  assert.match(q.LineItems[0].Description, /New design, 25 changes from the template\nMister Minit price mat · Stores: PENRITH x2/);
   assert.equal(q.LineItems[1].Description, "80x40cm Non-slip Mat - Colour Stitched - 4mm - Reprint");
   assert.equal(q.BrandingThemeID, "f1738545-71a6-4461-b30c-71b8eb620fc5");
   assert.equal(doc.number, "QU-0004");

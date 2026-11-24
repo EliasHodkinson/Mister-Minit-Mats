@@ -1,42 +1,66 @@
 # Mister Minit Mat Builder
 
-A guided, eight-step form that walks a Mister Minit store owner through the price mat, raises a
-**Xero quote** for their mats, then emails the finished brief to the Ankor'd design team (and a copy
-with the quote to the store) from **marketing@ankord.com.au** via Microsoft 365.
-
-The flow for the store: fill in the form and submit → approve and pay the quote → Ankor'd applies the
-design changes and sends a mockup → once approved, the mats are ordered and delivered to the address
-they gave.
+Store owners sign in, enter their business details once, then build their price mat step by step:
+stores → each part of the mat → review & order. Ordering saves the order to their account, raises a
+**Xero invoice** and emails the brief to the Ankor'd design team (and a copy with the invoice to the store)
+from **marketing@ankord.com.au** via Microsoft 365. Staff follow and update every order at
+**/misterminit/admin**.
 
 ```
-index.html        the builder (single page, no build step)
-api/submit.js     serverless endpoint: rate limit → validate → reCAPTCHA → Xero quote → build → send
-api/pricing.js    the mat prices the page shows (same settings the quote uses)
-lib/order.js      pricing, ABN check, stores and business details
-api/xero.js       one-time Xero connect / callback, status, and the daily keep-alive cron
-lib/xero.js       Xero sign-in + find-or-create contact, raise quote/invoice, fetch PDF
-lib/store.js      key/value store (Upstash Redis) holding the Xero login
-lib/brief.js      turns the brief into the Ankor'd-branded HTML emails and a .csv
-lib/checklist.js  the designer's printable A4 checklist PDF (pdf-lib)
-lib/brand.js      Ankor'd colours, details and the embedded logo used in the emails
-lib/graph.js      Microsoft Graph sender (App Registration, client-credentials)
-lib/recaptcha.js  reCAPTCHA v3 server-side verification
-lib/ratelimit.js  fixed-window rate limiter (in-memory, or Redis when configured)
-scripts/          xero-inspect.js – prints an existing quote's codes so new quotes can match it
-tests/            node --test
+index.html          customer app shell (no build step, ES modules)
+assets/app.js       sign-in landing, onboarding, My mats, account, order tracking (hash routes)
+assets/builder.js   the guided builder: drag & drop (SortableJS), autosaved drafts, live pricing
+admin.html          staff dashboard shell → assets/admin.js / admin.css
+assets/*.css        base.css (tokens + components), app.css, mat.css (the mat render), admin.css
+shared/mat.js       used by browser AND server: template, change counting, price tiers, statuses, mat render
+api/auth.js         WorkOS AuthKit sign-in / callback / sign-out (sealed-session cookie)
+api/me.js           the signed-in account + business details (creates the Xero contact on first save)
+api/designs.js      drafts and ordered designs (create from template or as a reorder, autosave, delete)
+api/orders.js       the customer's orders (marks invoices paid in Xero as "Paid")
+api/submit.js       place an order: recount changes → price → save → Xero invoice → emails
+api/admin.js        staff only: all orders and customers, status / tracking / notes updates
+api/pricing.js      freight / GST settings and the price tiers
+api/xero.js         one-time Xero connect / callback, status, and the daily keep-alive cron
+lib/                auth, db (Neon), orders, designs, profile, xero, brief + checklist emails, graph mail
+db/schema.sql       Postgres schema (customers, designs, orders) – apply with scripts/migrate.js
+tests/              node --test
 ```
 
-## Store, business and order details (step 1)
+## Accounts (WorkOS AuthKit)
 
-- **Stores:** one row per store (name line 1, optional line 2, quantity). Owners with several stores
-  add a row for each; every store gets the same design with its own name. Mat size is fixed at
-  800 x 400 mm. The live preview shows the first store's name.
-- **Business:** legal entity name, trading name, ABN (checked with the ATO checksum), first and last
-  name, email, phone, billing address, and a delivery address if it's different.
-- **Price:** the first mat is `MAT_PRICE_FIRST` ($250, includes up to 45 minutes of design time), every
-  further mat across all stores is `MAT_PRICE_EXTRA` ($150), plus `FREIGHT_PRICE` ($25) once per order. Prices include GST and quotes are raised Tax Inclusive
-  (`PRICES_INCLUDE_GST`). The
-  page shows a live order summary, and the server prices the quote from the same settings.
+Sign-in uses **WorkOS AuthKit** (free tier: email + password, magic code, Google/Microsoft sign-in) in its
+own WorkOS project, **Mister Minit Mats**, so nothing is shared with other WorkOS apps. The callback seals
+the WorkOS session into an HttpOnly `mm_session` cookie (30 days, refreshed automatically).
+
+- First sign-in asks for the business details: legal and trading name, ABN (ATO checksum), contact, phone,
+  billing and optional delivery address. Saving them finds or creates the **Xero contact** (by ABN, email,
+  then name) and stores its id on the account, so every invoice goes to the same contact.
+- Staff are the emails listed in `ADMIN_EMAILS` (comma-separated). They get an **Admin** link.
+- WorkOS settings per environment: redirect URI `https://<host>/misterminit/api/auth/callback`,
+  sign-out redirect `https://<host>/misterminit/`.
+
+## Pricing
+
+The first mat is priced by how many changes the store makes; each extra mat of the same design is $150;
+freight is $25 per order. Prices include GST.
+
+| Changes | ≤10 | 11–20 | 21–30 | 31–40 | 41–50 | 51–60 | 61–70 | 71+ |
+|---|---|---|---|---|---|---|---|---|
+| First mat | $150 | $165 | $180 | $195 | $210 | $225 | $240 | $250 |
+
+**What counts as a change** (`designChanges` in `shared/mat.js`): each line edited, added or removed = 1;
+each section setting (title, subtitle, badge, footnote, colour, column) = 1; a new section = 1 per line;
+a removed section = 1; reordering lines in a section = 1; reordering sections in a column = 1. Store names
+don't count. **Reorders** (from *My mats*) count changes against the customer's previous design, so a
+straight reprint or up to 10 changes is $150. The server always recounts from the saved baseline; the
+browser's number is only for display.
+
+## Order statuses
+
+Requested (invoice sent) → Paid (set automatically when Xero shows the invoice paid) → In design →
+Mockup sent → Approved → Printing → Shipped → Delivered, or Cancelled. Staff change the status, tracking
+number and internal note on the admin page; every change is logged with who and when, and the customer
+sees the progress on their order page.
 
 ## Xero
 
@@ -89,39 +113,6 @@ reason. Run the connect link again to fix it.
 Prefer a paid **Custom connection** instead? Set `XERO_MODE=custom`. It uses client credentials, and no
 store or connect step is needed.
 
-## What you receive
-
-Each submission sends **marketing@ankord.com.au** one email with:
-
-- the stores and quantities, business details (legal / trading name, ABN), contact, billing and
-  delivery addresses, submission time and any notes from the store
-- the Xero quote number, whether it's a new or existing Xero contact, and the priced order
-- a high-resolution render of their layout (inline and attached as `layout.png`, 3000 px wide)
-- the list of changes from the template
-- every section on the mat as a table: item, price, red-price flag, packages, tiers, combo deals,
-  with changed rows highlighted orange and added rows green
-- attached: the render, a printable **checklist PDF** (store names, notes, every change and every line
-  on the mat, each with a tick box; changed lines tinted orange, added green), a `.csv` of every line
-  (for Illustrator) and the invoice PDF
-
-Both emails carry the Ankor'd header, colours and footer. Reply-to on the designer copy is the
-store contact, so replying goes to them. The store gets a short email: the invoice number, total
-and due date, a **Pay invoice** button (Xero's online invoice), three numbered next steps, their order,
-changes and layout, with the invoice PDF attached. Reply-to is marketing@.
-
-## Abuse protection
-
-- **reCAPTCHA v3.** The page fetches a token on submit (action `submit_brief`); the endpoint
-  verifies it with Google and rejects scores below `RECAPTCHA_MIN_SCORE` (default 0.5). The
-  badge is hidden, so the required disclosure text sits in the site footer. Keys live in the
-  Google reCAPTCHA admin console; the secret goes in `RECAPTCHA_SECRET_KEY`.
-- **Rate limits.** Per IP (5 / 10 min), per contact email (3 / hour) and overall (100 / hour),
-  all tunable via `RATE_LIMIT_*`. Exceeding one returns HTTP 429 with a friendly message.
-  Out of the box the counters are in-memory per serverless instance, which stops bursts but is
-  not a global guarantee; add **Upstash for Redis** from the Vercel Marketplace (free tier is
-  plenty) and the limits become global automatically.
-- **Payload checks.** Image type and size, section counts, email format, and a 4 MB body cap.
-
 ## One-time setup: Microsoft 365 App Registration
 
 1. **Microsoft Entra admin center → App registrations → New registration.**
@@ -164,56 +155,49 @@ changes and layout, with the invoice PDF attached. Reply-to is marketing@.
    (The older `New-ApplicationAccessPolicy` approach was tried first and blocked every send at
    runtime with a RAOP 403 even though `Test-ApplicationAccessPolicy` reported Granted.)
 
+## What the design team receives
+
+Each order emails **marketing@ankord.com.au** with the order number, stores and quantities, business and
+delivery details, the Xero invoice, the number of changes and the mat price, a high-resolution render of
+the layout, the list of changes, and every section as a table (changed rows orange, added green). Attached:
+the render, a printable **checklist PDF**, a `.csv` of every line (for Illustrator) and the invoice PDF.
+The store gets a short email with a **Pay invoice** button and a link to the order in their account.
+
+If Xero or email fails, the order is still saved; the error shows on the admin order page.
+
+## Abuse protection
+
+Ordering needs a signed-in account with complete business details. Orders are rate limited per account
+(6 / hour) and overall (100 / hour) via `RATE_LIMIT_*`, globally when Upstash Redis is configured.
+
 ## Deploy (Vercel)
 
-The project is laid out for Vercel: `index.html` is served as the site and `api/submit.js` becomes
-the endpoint at `/api/submit`. The only npm dependency is `pdf-lib` (for the checklist).
+Production is the `main` branch (https://apps.ankord.com.au/misterminit); **staging** is the `staging`
+branch's Preview deployment. Environment variables (see `.env.example`), per environment:
 
 ```bash
-vercel login
-vercel link
-vercel env add MS_DIRECTORY_TENANT_ID
-vercel env add MS_APPLICATION_CLIENT_ID
-vercel env add MS_APP_CLIENT_SECRET
-vercel env add MAIL_FROM        # marketing@ankord.com.au
-vercel env add MAIL_TO          # marketing@ankord.com.au (comma-separate for more)
-vercel env add RECAPTCHA_SECRET_KEY
-vercel env add XERO_CLIENT_ID
-vercel env add XERO_CLIENT_SECRET
-vercel env add XERO_ADMIN_KEY
-vercel env add CRON_SECRET
-vercel env add FREIGHT_PRICE    # plus any other XERO_* / pricing settings from .env.example
-vercel --prod
+vercel env add DATABASE_URL preview staging          # Neon "staging" branch, pooled connection string
+vercel env add WORKOS_API_KEY preview staging        # WorkOS dashboard → Mister Minit Mats → Staging → API keys
+vercel env add WORKOS_CLIENT_ID preview staging
+vercel env add WORKOS_COOKIE_PASSWORD preview staging   # 32+ random characters: openssl rand -base64 48
+vercel env add ADMIN_EMAILS preview staging
 ```
 
-The app is served at **/misterminit** (see the rewrites in `vercel.json`); `/` redirects there.
-Live URL: https://apps.ankord.com.au/misterminit
-
-**Embedding on the main website instead?** Host this project on Vercel anyway, then either link
-or iframe `https://apps.ankord.com.au/misterminit`, or copy `index.html` into the website and set
-`SUBMIT_URL` at the top of its script to the full API URL. In that case also set
-`ALLOWED_ORIGIN=https://www.ankord.com.au` on the Vercel project so the browser allows the
-cross-origin request.
-
-**Another host?** `processSubmission(body, env)` in `api/submit.js` is framework-free. Wrap it in
-an Azure Function or Express route and it works the same.
+Database: one Neon project (**mister-minit-mats**) with a `production` and a `staging` branch. Apply the
+schema with `DATABASE_URL=… node scripts/migrate.js` (safe to re-run).
 
 ## Run locally
 
 ```bash
-cp .env.example .env.local     # fill in the real values
-vercel dev                     # http://localhost:3000/misterminit
-npm test                       # unit tests for the email builder and validation (no mail sent)
+npm test                                   # change counting, pricing, order flow, Xero payloads (no network)
+node .claude/mock/app-mock.mjs             # UI only: http://localhost:8790/misterminit/ with a fake API
+vercel dev                                 # full stack with .env.local
 ```
-
-Without `.env.local` the page still works for filling in; only the final Submit fails with a clear
-"Email isn't configured yet" message.
 
 ## Notes
 
-- The builder captures the render in the browser with html2canvas (loaded from cdnjs at submit
-  time), so the page needs to be allowed to load that script.
-- Microsoft Graph's `sendMail` request is capped at about 4 MB. The builder keeps the render under
-  that by switching from PNG to a high-quality JPEG when the PNG would be too large.
-- The header (FIXED WHILE YOU WAIT, services strip, GST line) is fixed and not editable in the form.
-- A store's progress is saved in their browser, so they can come back and finish later.
+- The layout image for the designer is captured in the browser with html2canvas (cdnjs) and kept under
+  Microsoft Graph's ~4 MB limit by switching to JPEG when needed.
+- Drafts autosave to the account about a second after each edit, with a backup in the browser in case the
+  connection drops.
+- The header (FIXED WHILE YOU WAIT, services strip, GST line) is fixed and not editable.

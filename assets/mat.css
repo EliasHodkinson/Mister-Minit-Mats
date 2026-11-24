@@ -1,0 +1,77 @@
+/* The Mister Minit mat render (shared/mat.js matHTML): used on the review step, order pages and the admin view. Wrap in .mat-wide for the 1500px print layout. */
+.pv-mat{background:var(--navy);border-radius:8px;padding:10px;color:#fff}
+.pv-header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 4px 8px;border-bottom:2px solid var(--red);margin-bottom:8px;flex-wrap:wrap}
+.pv-header .logo{font-weight:800;letter-spacing:.02em;font-size:14px;text-transform:uppercase}
+.pv-header .logo i{display:block;font-size:9px;color:var(--red-bright);font-weight:600;letter-spacing:0}
+.pv-header .fixed{text-align:center;flex:1}
+.pv-header .fixed b{font-size:20px;font-weight:800;letter-spacing:-.02em;text-transform:uppercase}
+.pv-header .fixed b span{color:var(--red-bright);font-size:12px;margin-left:6px}
+.pv-header .fixed small{display:block;font-size:8px;letter-spacing:.14em;font-weight:600;text-transform:uppercase;color:#fff}
+.pv-header .fixed small.gst{color:#9fb0cc;letter-spacing:.1em;margin-top:2px}
+.pv-header .store{text-align:right;font-weight:800;text-transform:uppercase;font-size:13px;line-height:1.1;letter-spacing:.02em}
+.pv-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.pv-col{border-radius:6px;transition:opacity .2s}
+.pv-mat.focus .pv-col:not(.active){opacity:.35}
+.pv-col.active{outline:2px solid var(--red-bright);outline-offset:4px}
+.pv-col-label{font-size:9px;color:#9fb0cc;letter-spacing:.14em;text-transform:uppercase;margin:6px 0 2px;font-weight:600}
+.pv-sec{background:var(--navy);border:1.5px solid var(--c);border-radius:6px;overflow:hidden;margin-bottom:6px;break-inside:avoid}
+.pv-head{background:var(--c);color:var(--fg);font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pv-head .sub{display:block;font-size:8.5px;letter-spacing:.1em;font-weight:700}
+.pv-head .badge{background:var(--navy);color:#fff;font-size:8px;padding:2px 6px;border-radius:3px;letter-spacing:.06em;white-space:nowrap}
+.pv-rows{padding:4px 8px 5px}
+.pv-row{display:flex;justify-content:space-between;gap:10px;padding:1.5px 0;font-size:11.5px;line-height:1.3}
+.pv-row .l{flex:1}
+.pv-price{font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.pv-price.hl{color:var(--red-bright)}
+.pv-note{color:var(--red-bright);font-size:9px;font-weight:700;text-transform:uppercase;padding:3px 8px 6px;white-space:pre-line;line-height:1.3}
+.pv-note::before{content:"★ "}
+.pv-note.plain{text-transform:none;font-weight:600}
+.pv-note.plain::before{content:""}
+.pv-pk{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:6px 8px 2px}
+.pv-pk .pk{background:#1f3357;border-radius:6px;padding:8px 6px;text-align:center}
+.pv-pk .pk.feat{background:#5cc4d8;color:var(--navy)}
+.pv-pk .num{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--ok);color:#fff;font-size:10px;font-weight:800;line-height:18px}
+.pv-pk .pk.feat .num{background:var(--navy)}
+.pv-pk .nm{font-weight:800;font-size:9.5px;text-transform:uppercase;color:#3fbf63;margin:4px 0;line-height:1.15}
+.pv-pk .pk.feat .nm{color:var(--navy)}
+.pv-pk .inc{font-size:9.5px;white-space:pre-line;line-height:1.25;min-height:36px}
+.pv-pk .pr{font-weight:800;font-size:16px;margin-top:4px}
+.pv-pk .sv{display:inline-block;background:var(--ok);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;letter-spacing:.04em}
+.pv-tier{display:grid;grid-template-columns:78px 1fr auto;gap:8px;align-items:center;background:#1f3357;margin:5px 8px;border-radius:6px;padding:7px 8px}
+.pv-tier .tb{background:var(--tc);color:#fff;font-weight:800;font-size:10px;text-transform:uppercase;padding:3px 6px;border-radius:999px;text-align:center;letter-spacing:.04em}
+.pv-tier .td{font-size:10px;white-space:pre-line;line-height:1.3}
+.pv-tier .tp{text-align:right;font-weight:800;font-size:15px;line-height:1}
+.pv-tier .tp small{display:block;font-size:8px;font-weight:600;letter-spacing:.06em;margin-top:3px;text-transform:uppercase}
+.pv-combos{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:8px}
+.pv-combo .ct{color:var(--red-bright);font-weight:800;text-transform:uppercase;font-size:11px;letter-spacing:.04em}
+.pv-combo .cd{font-size:10px;white-space:pre-line;line-height:1.3;margin:2px 0}
+.pv-combo .cp{font-weight:800;font-size:13px}
+.pv-combo .cp s{color:#9fb0cc;font-weight:600;font-size:11px;margin-right:5px}
+.pv-combo .cs{display:inline-block;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle}
+.pv-combo .cn{display:inline-block;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;margin-top:3px}
+.pv-guar{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 8px 8px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.pv-guar span b{color:#fff}
+.mat-wide .pv-grid{grid-template-columns:repeat(5,1fr);gap:8px;align-items:start}
+.mat-wide .pv-band{grid-column:1/-1}
+.mat-wide .pv-combos{grid-template-columns:repeat(6,1fr)}
+.mat-wide .pv-header{padding:10px 12px 14px;margin-bottom:12px;border-bottom-width:4px}
+.mat-wide .pv-header .logo{font-size:30px}
+.mat-wide .pv-header .logo i{font-size:14px}
+.mat-wide .pv-header .fixed b{font-size:60px;line-height:1}
+.mat-wide .pv-header .fixed b span{font-size:34px;margin-left:12px}
+.mat-wide .pv-header .fixed small{font-size:14px;margin-top:6px}
+.mat-wide .pv-header .fixed small.gst{font-size:10px}
+.mat-wide .pv-header .store{font-size:28px}
+.mat-wide .pv-sec.kind-guarantee{display:flex;align-items:center;gap:24px;border:none;background:transparent;padding:6px 10px}
+.mat-wide .pv-sec.kind-guarantee .pv-head{background:transparent;color:var(--red-bright);font-size:54px;padding:0;letter-spacing:.02em;line-height:1;white-space:nowrap}
+.mat-wide .pv-sec.kind-guarantee .pv-guar{flex:1;display:grid;grid-template-columns:repeat(3,auto);gap:4px 26px;font-size:17px;padding:0}
+.mat-wide .pv-guar span b{color:#fff}
+.mat-render-box{overflow:hidden;border-radius:8px;background:var(--navy-2);padding:0;position:relative}
+/* "Example only" watermark over the layout render */
+.mat-render-box::after{content:"Example only";position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;
+  font-size:clamp(34px,9cqw,120px);font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.32);
+  -webkit-text-stroke:2px rgba(24,42,72,.5);text-shadow:0 2px 12px rgba(0,0,0,.35);transform:rotate(-16deg);white-space:nowrap}
+.mat-render-box{container-type:inline-size}
+.mat-render{width:1500px;transform-origin:top left}
+.mat-render .pv-col-label{display:none}
+.mat-render .pv-mat{border-radius:0}
