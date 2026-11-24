@@ -108,18 +108,51 @@ img{max-width:100%}
 .site-head nav a{color:#c9d3e6;text-decoration:none;font-size:14px;font-weight:500;padding:7px 11px;border-radius:9px}
 .site-head nav a:hover,.site-head nav a.on{color:#fff;background:rgba(255,255,255,.1)}
 .avatar{width:36px;height:36px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;border:2px solid rgba(255,255,255,.25);cursor:pointer;text-decoration:none}
-.ankord-mark{display:inline-flex;align-items:center;gap:8px;color:#9fb0cc;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap}
-.ankord-mark svg{height:16px;width:auto;color:var(--ak-orange);display:block}
-@media (max-width:760px){ .site-head nav,.ankord-mark span{display:none} .brand span{display:none} .site-head .in{padding:0 14px} }
+@media (max-width:760px){ .site-head nav{display:none} .brand span{display:none} .site-head .in{padding:0 14px} }
 
-.site-foot{margin-top:auto;background:var(--ak-teal);color:#fff;border-top:4px solid var(--ak-orange)}
-.site-foot .in{max-width:1180px;margin:0 auto;padding:26px 20px 24px;display:flex;flex-wrap:wrap;gap:16px 40px;align-items:flex-start;justify-content:space-between}
-.site-foot .logo svg{height:30px;width:auto;color:var(--ak-orange);display:block}
-.site-foot .tag{color:var(--ak-mist);font-size:12.5px;margin-top:8px;max-width:420px}
-.site-foot .links{display:flex;flex-direction:column;gap:6px;font-size:13px}
-.site-foot .links b{display:block;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ak-mist);margin-bottom:2px}
-.site-foot a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
-.site-foot .fine{width:100%;color:var(--ak-mist);font-size:11px;border-top:1px solid rgba(255,255,255,.12);padding-top:14px}
+/* ---------- footer (layout after ankord.com.au, in the Mister Minit colours) ---------- */
+.site-foot{position:relative;margin-top:auto;background:var(--navy-2);color:#c9d3e6;overflow:hidden}
+.foot-wave{position:absolute;left:0;top:0;width:100%;height:40px;pointer-events:none}
+.foot-wave path{fill:none;stroke:var(--red-bright);stroke-width:1.5;opacity:.35;vector-effect:non-scaling-stroke}
+.foot-wave path + path{stroke:#fff;opacity:.08}
+.site-foot .in{max-width:1180px;margin:0 auto;padding-left:20px;padding-right:20px}
+.foot-main{position:relative;display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:24px 40px;align-items:center;padding-top:44px;padding-bottom:28px}
+.foot-brand .brand b{font-size:17px}
+.foot-brand .brand span{display:inline}
+.foot-brand p{margin:8px 0 0;font-size:13px;line-height:1.55;color:#9fb0cc;max-width:320px}
+.foot-tag{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#9fb0cc;line-height:1.9}
+.foot-tag b{color:#fff;font-weight:600}
+.foot-help{display:flex;flex-direction:column;gap:3px;font-size:13px}
+.foot-help span{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9fb0cc}
+.foot-help a{color:#fff;text-decoration:none;width:max-content;background:linear-gradient(var(--red-bright),var(--red-bright)) 0 100%/0 1.5px no-repeat;transition:background-size .3s var(--ease)}
+.foot-help a:hover,.foot-help a:focus-visible{background-size:100% 1.5px}
+.foot-top{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 18px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;font-weight:600;font-size:13px;cursor:pointer;transition:border-color .2s,background .2s}
+.foot-top:hover,.foot-top:focus-visible{border-color:#fff;background:rgba(255,255,255,.06)}
+.foot-top .i{width:15px;height:15px;transition:transform .25s var(--ease)}
+.foot-top:hover .i{transform:translateY(-2px)}
+.foot-bar{display:flex;align-items:center;justify-content:space-between;gap:10px 20px;flex-wrap:wrap;padding-top:6px;padding-bottom:10px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#8193b2}
+
+/* "Powered by Ankor'd" – same mark and hover as the other Ankor'd-built sites */
+a.ankord{--snap:cubic-bezier(.2,.9,.15,1);display:inline-flex;align-items:center;gap:9px;min-height:44px;color:inherit;text-decoration:none;font-size:12px}
+.ankord-logo{position:relative;display:block;line-height:0}
+.ankord-logo > svg[role=img]{display:block;width:auto;height:17px;fill:#c9d3e6;overflow:visible;transition:fill .2s}
+.ankord-mark-g path{transition:transform .45s var(--snap)}
+.ankord-scribble{position:absolute;left:-2px;bottom:-7px;width:calc(100% + 4px);height:5px;overflow:visible}
+.ankord-scribble path{fill:none;stroke:var(--red-bright);stroke-width:2.5px;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:1px;transition:stroke-dashoffset .4s cubic-bezier(.6,0,.3,1)}
+a.ankord:hover,a.ankord:focus-visible{color:#fff}
+.ankord:hover .ankord-logo > svg[role=img],.ankord:focus-visible .ankord-logo > svg[role=img]{fill:var(--ak-orange)}
+.ankord:hover .ankord-a,.ankord:focus-visible .ankord-a{animation:ankord-snap-a .5s var(--snap)}
+.ankord:hover .ankord-b,.ankord:focus-visible .ankord-b{animation:ankord-snap-b .5s var(--snap)}
+.ankord:hover .ankord-scribble path,.ankord:focus-visible .ankord-scribble path{stroke-dashoffset:0;transition-delay:.12s}
+@keyframes ankord-snap-a{0%{transform:none}35%{transform:translate(-90px,70px)}100%{transform:none}}
+@keyframes ankord-snap-b{0%{transform:none}35%{transform:translate(90px,-70px)}100%{transform:none}}
+
+@media (max-width:900px){ .foot-main{grid-template-columns:1fr 1fr} .foot-top{justify-self:start} }
+@media (max-width:560px){
+  .foot-main{grid-template-columns:1fr;gap:20px;padding-top:40px}
+  .foot-top{width:100%;justify-content:center}
+  .foot-bar{flex-direction:column;align-items:flex-start;gap:2px;padding-bottom:14px}
+}
 
 /* ---------- toast, dialogs, loading ---------- */
 .toast{position:fixed;left:50%;bottom:24px;z-index:90;transform:translate(-50%,16px);opacity:0;pointer-events:none;background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;box-shadow:var(--shadow-3);

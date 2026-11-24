@@ -192,7 +192,7 @@ class Builder {
     view.classList.remove("in-left", "in-right"); void view.offsetWidth;
     if (dir) view.classList.add(dir > 0 ? "in-right" : "in-left");
     this.paintSteps(); this.paintNav(); this.paintSide(); this.paintName();
-    if (s.col) this.bindSortables();
+    if (s.col) { this.bindSortables(); requestAnimationFrame(() => $$("textarea", view).forEach(autosize)); }
     if (s.id === "review") { requestAnimationFrame(() => fitRender($("#review-mat", this.root))); }
   }
   async goTo(i, viaNext = false) {
@@ -305,10 +305,10 @@ class Builder {
       else if (type === "color") ctl = `<input type="color" ${a} value="${esc(it[key] || "#1e5fa8")}" aria-label="${esc(label)}">`;
       else if (type === "area") ctl = `<textarea rows="2" ${a} placeholder="${esc(label)}" aria-label="${esc(label)}">${esc(it[key])}</textarea>`;
       else ctl = `<input type="text" ${a} value="${esc(it[key])}" placeholder="${esc(label)}" aria-label="${esc(label)}">`;
-      return `<label class="cell c-${size || type} t-${type}"><span class="cl">${esc(label)}</span>${ctl}</label>`;
+      return `<label class="cell c-${size || type} t-${type} f-${key}"><span class="cl">${esc(label)}</span>${ctl}</label>`;
     }).join("");
     return `<div class="line kind-${sec.kind} ${this.rowClass(sec, it)}" data-row="${it.id}">
-      <span class="grip" title="Drag to reorder" aria-label="Drag to reorder line">${icon("grip")}</span>${cells}
+      <span class="grip" title="Drag to reorder" aria-label="Drag to reorder line">${icon("grip")}</span><div class="cells">${cells}</div>
       <button type="button" class="icon-btn del" data-act="del-item" data-sec="${sec.id}" data-item="${it.id}" aria-label="Remove line">${icon("x")}</button></div>`;
   }
   bindSortables() {
@@ -532,7 +532,7 @@ class Builder {
     this.submitting = true;
     const overlay = document.createElement("div");
     overlay.className = "submit-overlay";
-    const stages = ["Preparing your mat layout", "Saving your order", "Creating your invoice in Xero", `Emailing ${session.user?.email}`];
+    const stages = ["Preparing your mat layout", "Saving your order", "Creating your invoice", `Emailing ${session.user?.email}`];
     overlay.innerHTML = `<div class="submit-box"><h2>Placing your order</h2><p class="muted">This usually takes under a minute. Keep this page open.</p>
       <ol class="stages">${stages.map((s, i) => `<li class="stage" data-stage="${i}"><span class="stage-dot">${icon("check")}</span><span>${esc(s)}</span></li>`).join("")}</ol><div id="submit-err"></div></div>`;
     document.body.appendChild(overlay);

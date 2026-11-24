@@ -38,8 +38,9 @@
 
 .admin-foot{margin-top:auto;border-top:1px solid var(--line);background:#fff}
 .admin-foot .in{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12.5px;color:var(--muted)}
-.admin-foot .ankord-mark{color:var(--muted)}
-.admin-foot .ankord-mark svg{color:var(--ak-orange)}
+.admin-foot a.ankord{color:var(--muted);min-height:36px}
+.admin-foot .ankord-logo > svg[role=img]{fill:var(--ink-2)}
+.admin-foot .ankord-scribble path{stroke:var(--red)}
 @media (max-width:760px){ .admin-foot{display:none} }
 
 /* ---------- toolbar: status chips + search ---------- */
