@@ -389,6 +389,8 @@ export async function render() {
   renderHeader();
   window.scrollTo({ top: 0 });
   if (!session.user) { setView(landingHTML(), "landing"); return; }
+  // Staff skip business details (that would add them to Xero as a customer) and go to the admin dashboard.
+  if (session.isAdmin && !session.onboarded) { location.replace("/misterminit/admin"); return; }
   if (!session.onboarded) { onboardingView(); return; }
   const r = route();
   if (r.name === "account") return accountView();

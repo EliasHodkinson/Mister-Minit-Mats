@@ -6,7 +6,7 @@
  *   GET ?view=customer&id=           → one customer with their designs and orders
  *   PATCH ?id=                       → { status?, note?, tracking?, adminNote? } update an order (status changes are logged)
  */
-import { handle, requireUser, fail } from "../lib/auth.js";
+import { handle, requireUser, fail, isAdminEmail } from "../lib/auth.js";
 import { db } from "../lib/db.js";
 import { summary, UUID } from "../lib/designs.js";
 import { orderJson, syncPayments } from "../lib/orders.js";
@@ -49,7 +49,7 @@ export default handle(async (req, res) => {
         from customers c left join orders o on o.customer_id = c.id
         where (${search}::text is null or c.email ilike ${search} or c.trading_name ilike ${search} or c.legal_name ilike ${search} or c.abn ilike ${search})
         group by c.id order by coalesce(max(o.created_at), c.created_at) desc limit 500`;
-      return res.status(200).json({ ok: true, customers: rows.map(c => ({ id: c.id, ...profileJson(c), xeroContactId: c.xero_contact_id, xeroError: c.xero_error,
+      return res.status(200).json({ ok: true, customers: rows.filter(c => !isAdminEmail(c.email)).map(c => ({ id: c.id, ...profileJson(c), xeroContactId: c.xero_contact_id, xeroError: c.xero_error,
         createdAt: c.created_at, orderCount: c.order_count, spend: c.spend, lastOrder: c.last_order })) });
     }
     if (q.view === "customer") {

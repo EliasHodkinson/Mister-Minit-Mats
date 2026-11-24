@@ -1,7 +1,7 @@
 /*
  * /misterminit/api/me
  *   GET → who's signed in: { user, profile, onboarded, isAdmin } (401 when signed out)
- *   PUT → save the business details (first sign-in onboarding, or editing them later). On the first save the
+ *   PUT → (customers only, never staff) save the business details (first sign-in onboarding, or editing them later). On the first save the
  *         customer is found or created in Xero (by ABN, then email, then name) and the contact id is kept, so every
  *         invoice goes to the same contact. A Xero problem never blocks the save; it's retried on the first order.
  */
@@ -24,6 +24,8 @@ export default handle(async (req, res) => {
 
   if (req.method === "GET") return reply(customer);
   if (req.method !== "PUT") throw fail(405, "Method not allowed");
+  // Staff use the admin dashboard and never order, so they never get business details or a Xero contact.
+  if (isAdmin) throw fail(403, "Staff accounts don't need business details");
 
   const p = readProfile(req.body || {}, user.email);
   const problems = profileProblems(p);
