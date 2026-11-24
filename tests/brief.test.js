@@ -181,6 +181,15 @@ test("test mode (staging): order saved, nothing sent to Xero, no emails", async 
   assert.equal(r.xeroError, null);
   assert.equal(r.customerCopy, false);
   assert.ok(sql.calls.some(c => /email_error/.test(c.text) && c.values.some(v => /Test mode/.test(v))));
+  assert.ok(!sql.calls.some(c => c.values.some(v => /Brief failed/.test(String(v)))), "the brief and checklist still build in test mode");
   assert.equal(readEnv({ XERO_CLIENT_ID: "x", XERO_CLIENT_SECRET: "y", VERCEL_ENV: "production" }).TEST_MODE, false);
   assert.equal(readEnv({ VERCEL_ENV: "preview", TEST_MODE: "false" }).TEST_MODE, false);
+});
+
+test("a returning customer's invoice (saved Xero contact) still builds the brief", async () => {
+  const sql = fakeSql(), sent = [];
+  const raise = async () => ({ ...fakeDoc, contact: { contactId: "c1", created: false, matchedBy: "the saved account link" } });
+  await processOrder({ customerRow: { ...customerRow, xero_contact_id: "c1" }, design, state: editedState(), image }, xeroEnv, { sql, send: async (_e, m) => { sent.push(m); }, raise });
+  assert.equal(sent.length, 2);
+  assert.ok(sent[0].html.includes("Lee Family Holdings Pty Ltd"));
 });
