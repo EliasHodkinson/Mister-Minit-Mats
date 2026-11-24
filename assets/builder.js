@@ -263,6 +263,7 @@ class Builder {
           : `<button type="button" class="add-dashed" data-act="pick-kind" data-col="${s.col}">${icon("plus")} Add a section</button>`}
       </div>`;
   }
+  undoBtn(sec) { return `<button type="button" class="icon-btn" data-act="undo-sec" data-sec="${sec.id}" title="Undo this section's changes" aria-label="Undo this section's changes">${icon("undo")}</button>`; }
   secBadge(sec) {
     const n = this.secCount(sec), isNew = !this.baseById.has(sec.id);
     return isNew ? `<span class="sec-badge new">New · ${plural(n, "change")}</span>` : n ? `<span class="sec-badge changed">${plural(n, "change")}</span>` : `<span class="sec-badge"></span>`;
@@ -283,7 +284,7 @@ class Builder {
         <input class="sec-title" type="text" data-sec="${sec.id}" data-key="title" value="${esc(sec.title)}" placeholder="SECTION TITLE" aria-label="Section title">
         ${this.secBadge(sec)}
         <div class="sec-tools">
-          ${changed ? `<button type="button" class="icon-btn" data-act="undo-sec" data-sec="${sec.id}" title="Undo this section's changes" aria-label="Undo this section's changes">${icon("undo")}</button>` : ""}
+          ${changed ? this.undoBtn(sec) : ""}
           <button type="button" class="icon-btn del" data-act="del-sec" data-sec="${sec.id}" title="Remove section" aria-label="Remove section">${icon("trash")}</button>
           <button type="button" class="icon-btn chev" data-act="toggle" data-sec="${sec.id}" aria-expanded="${!col}" aria-label="${col ? "Expand" : "Collapse"} section">${icon("down")}</button>
         </div>
@@ -380,9 +381,11 @@ class Builder {
   changed(sec) {
     this.markDirty();
     if (sec) {
+      // show/hide the section's undo button in place – never redraw the card, or the field being typed in loses focus
       const card = this.root.querySelector(`[data-sec-card="${sec.id}"]`);
-      const has = !!card?.querySelector("[data-act=undo-sec]"), should = this.baseById.has(sec.id) && this.secCount(sec) > 0;
-      if (card && has !== should) { card.outerHTML = this.sectionHTML(sec); this.sortables.forEach(x => x.destroy()); this.sortables = []; this.bindSortables(); }
+      const btn = card?.querySelector("[data-act=undo-sec]"), should = this.baseById.has(sec.id) && this.secCount(sec) > 0;
+      if (card && !btn && should) card.querySelector(".sec-tools").insertAdjacentHTML("afterbegin", this.undoBtn(sec));
+      if (btn && !should) btn.remove();
     }
     this.refreshCounts();
   }
