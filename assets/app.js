@@ -174,6 +174,8 @@ function setView(html, cls = "") {
 }
 function renderHeader() {
   const nav = $("#nav"), act = $("#head-actions"), r = route();
+  if (session.testMode && !$("#test-banner")) $("#site-head").insertAdjacentHTML("afterend",
+    `<div class="test-banner" id="test-banner">${icon("info")} <b>Test site</b> – orders are saved, but nothing goes to Xero and no emails are sent.</div>`);
   if (!session.user) { nav.innerHTML = ""; act.innerHTML = `<a class="btn small primary" href="${signInUrl()}">Sign in</a>`; return; }
   const on = name => r.name === name ? "on" : "";
   nav.innerHTML = session.onboarded ? `<a href="#/" class="${on("home")}">My mats</a><a href="#/account" class="${on("account")}">Account</a>${session.isAdmin ? `<a href="/misterminit/admin">Admin</a>` : ""}` : "";
@@ -324,7 +326,7 @@ async function orderView(id, { justPlaced = null } = {}) {
   const pdf = placed?.invoice?.pdf;
   setView(`<div class="page">
     ${placed ? `<section class="placed fade-up"><div class="done-mark" aria-hidden="true">${icon("check")}</div>
-      <div><h1>Order placed</h1><p>${inv ? `${inv.kind === "invoice" ? "Invoice" : "Quote"} <b>${esc(inv.number)}</b> is on its way to <b>${esc(session.user.email)}</b>.` : `We've got your order. Your invoice will be emailed to <b>${esc(session.user.email)}</b> shortly.`}</p></div></section>` : ""}
+      <div><h1>Order placed</h1><p>${session.testMode ? `Test order – <b>${esc(inv?.number || o.number)}</b> was saved. No invoice was raised in Xero and no emails were sent.` : inv ? `${inv.kind === "invoice" ? "Invoice" : "Quote"} <b>${esc(inv.number)}</b> is on its way to <b>${esc(session.user.email)}</b>.` : `We've got your order. Your invoice will be emailed to <b>${esc(session.user.email)}</b> shortly.`}</p></div></section>` : ""}
     <header class="page-head"><div><a class="back-link" href="#/">${icon("left")} My mats</a><h1>Order ${esc(o.number)}</h1>
       <p>${esc(fmtWhen(o.createdAt))} · ${esc(o.storeNames)} · ${plural(o.mats, "mat")}</p></div>
       <span class="pill big s-${esc(o.status)}">${esc(o.statusLabel)}</span></header>
@@ -399,7 +401,7 @@ window.addEventListener("hashchange", () => render());
 (async function boot() {
   try {
     const d = await api("me");
-    Object.assign(session, { user: d.user, profile: d.profile, onboarded: d.onboarded, isAdmin: d.isAdmin });
+    Object.assign(session, { user: d.user, profile: d.profile, onboarded: d.onboarded, isAdmin: d.isAdmin, testMode: !!d.testMode });
   } catch (e) {
     if (e.status !== 401) console.warn(e);
   }

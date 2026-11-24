@@ -19,6 +19,7 @@ import { db } from "../lib/db.js";
 import { cleanState, UUID } from "../lib/designs.js";
 import { customerFromRow, docKind, profileProblems, readPricing, readStores, storeLabel } from "../lib/order.js";
 import { raiseXeroDocument, xeroConfigured } from "../lib/xero.js";
+import { testMode } from "../lib/testmode.js";
 import { annotate, COLUMNS, designChanges, HEADER, KIND_NAME, PALETTE, quoteLines, storeProblems, TEMPLATE_SECTIONS } from "../shared/mat.js";
 
 const MAX_IMAGE_CHARS = 3_200_000;      // ~2.4 MB decoded; Graph's sendMail request must stay under 4 MB
@@ -41,6 +42,7 @@ export function readEnv(env = process.env) {
     PRICING: readPricing(env),
   };
   for (const k of Object.keys(env)) if (k.startsWith("XERO_")) out[k] = env[k];
+  out.TEST_MODE = testMode(env);
   out.mailConfigured = Object.keys(ENV_NAMES).every(k => out[k]);
   return out;
 }
@@ -100,7 +102,11 @@ export async function processOrder({ customerRow, design, state, image }, env, {
 
   // 2. Xero
   let doc = null, xeroError = null;
-  if (xeroConfigured(env)) {
+  if (testMode(env)) {
+    // a stand-in invoice so the order pages look real; nothing is sent to Xero
+    const due = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+    doc = { kind: "invoice", id: null, number: `TEST-${order.number}`, payUrl: null, due, total: quote.total, subTotal: quote.subTotal, tax: quote.gst, pdf: null, test: true };
+  } else if (xeroConfigured(env)) {
     try {
       doc = await raise(env, { customer, stores, quote, contactId: customerRow.xero_contact_id, reference: `${order.number} – Mat brief – ${stores.map(storeLabel).join(", ")}` });
       if (!customerRow.xero_contact_id && doc.contact?.contactId) await sql`update customers set xero_contact_id = ${doc.contact.contactId}, xero_error = null where id = ${customerRow.id}`;
@@ -115,7 +121,12 @@ export async function processOrder({ customerRow, design, state, image }, env, {
   const extra = { order: { stores, customer, quote, number: order.number }, doc, xeroError, docKind: docKind(env), accountUrl: accountUrl ? accountUrl + order.id : "" };
   const emailErrors = [];
   let customerCopy = false;
-  if (!env.mailConfigured) emailErrors.push("Email isn't configured (MS_* settings missing)");
+  if (testMode(env)) {
+    // build everything (so a broken brief still shows up on staging) but send nothing
+    try { buildBrief(payload, extra); await checklistPdf(payload, extra); }
+    catch (e) { emailErrors.push(`Brief failed to build: ${e.message}`); console.error(e); }
+    emailErrors.push("Test mode: no emails were sent");
+  } else if (!env.mailConfigured) emailErrors.push("Email isn't configured (MS_* settings missing)");
   else {
     const brief = buildBrief(payload, extra);
     const render = imageAttachment(image), invoicePdf = pdfAttachment(doc);

@@ -10,12 +10,13 @@ import { db } from "../lib/db.js";
 import { profileProblems, readProfile } from "../lib/order.js";
 import { profileJson } from "../lib/profile.js";
 import { findOrCreateContact, xeroConfigured } from "../lib/xero.js";
+import { testMode } from "../lib/testmode.js";
 
 export default handle(async (req, res) => {
   const who = await requireUser(req, res); if (!who) return;
   const { user, customer, isAdmin } = who;
   const sql = db();
-  const reply = row => res.status(200).json({
+  const reply = row => res.status(200).json({ testMode: testMode(),
     ok: true, isAdmin,
     user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, emailVerified: user.emailVerified },
     profile: profileJson(row), onboarded: !!row.onboarded_at,

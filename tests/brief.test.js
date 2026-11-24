@@ -170,3 +170,17 @@ test("a Xero failure or email failure doesn't lose the order", async () => {
   assert.equal(r.customerCopy, false);
   assert.ok(sql.calls.some(c => /email_error/.test(c.text)));
 });
+
+test("test mode (staging): order saved, nothing sent to Xero, no emails", async () => {
+  const sql = fakeSql();
+  const never = async () => { throw new Error("should not be called"); };
+  const stagingEnv = readEnv({ MS_DIRECTORY_TENANT_ID: "t", MS_APPLICATION_CLIENT_ID: "c", MS_APP_CLIENT_SECRET: "s", XERO_CLIENT_ID: "x", XERO_CLIENT_SECRET: "y", VERCEL_ENV: "preview" });
+  assert.equal(stagingEnv.TEST_MODE, true);
+  const r = await processOrder({ customerRow, design, state: editedState(), image }, stagingEnv, { sql, send: never, raise: never });
+  assert.equal(r.doc.number, "TEST-MM-1001");
+  assert.equal(r.xeroError, null);
+  assert.equal(r.customerCopy, false);
+  assert.ok(sql.calls.some(c => /email_error/.test(c.text) && c.values.some(v => /Test mode/.test(v))));
+  assert.equal(readEnv({ XERO_CLIENT_ID: "x", XERO_CLIENT_SECRET: "y", VERCEL_ENV: "production" }).TEST_MODE, false);
+  assert.equal(readEnv({ VERCEL_ENV: "preview", TEST_MODE: "false" }).TEST_MODE, false);
+});

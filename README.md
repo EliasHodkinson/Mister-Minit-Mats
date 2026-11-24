@@ -183,6 +183,11 @@ vercel env add WORKOS_COOKIE_PASSWORD preview staging   # 32+ random characters:
 vercel env add ADMIN_EMAILS preview staging
 ```
 
+**Staging is a test site.** Preview deployments run in test mode (`lib/testmode.js`): orders, drafts and
+accounts are saved to the staging database, but nothing is created in Xero and no emails are sent; the
+app shows a yellow "Test site" strip and invoices are numbered `TEST-…`. Set `TEST_MODE=false` on Preview to
+turn that off.
+
 Database: one Neon project (**mister-minit-mats**) with a `production` and a `staging` branch. Apply the
 schema with `DATABASE_URL=… node scripts/migrate.js` (safe to re-run).
 

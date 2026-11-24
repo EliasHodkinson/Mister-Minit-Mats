@@ -176,3 +176,8 @@ dialog.modal .actions{display:flex;gap:10px;justify-content:flex-end;padding:18p
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
 }
+
+/* staging: test-mode strip under the header */
+.test-banner{display:flex;align-items:center;justify-content:center;gap:8px;padding:7px 16px;
+  background:#fff4d6;color:#7a5200;border-bottom:1px solid #f0d58c;font-size:13px;text-align:center}
+.test-banner .i{width:16px;height:16px;flex:none}
